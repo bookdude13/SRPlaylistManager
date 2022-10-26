@@ -1,6 +1,6 @@
 ﻿using MelonLoader;
 using SRModCore;
-using SRPlaylistManager.MonoBehavior;
+using SRPlaylistManager.UI;
 using SRPlaylistManager.Services;
 using System;
 using System.Collections.Generic;
@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using static MelonLoader.MelonLogger;
+using Synth.SongSelection;
 
 namespace SRPlaylistManager
 {
@@ -37,7 +38,7 @@ namespace SRPlaylistManager
                 menuMonoBehavior = new PlaylistMenuMonoBehavior(logger, playlistService);
             }
 
-            menuMonoBehavior?.OpenMenu();
+            menuMonoBehavior?.Toggle();
         }
     }
 }

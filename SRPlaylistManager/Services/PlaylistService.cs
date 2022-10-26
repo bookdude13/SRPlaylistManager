@@ -9,7 +9,7 @@ using Util.Data;
 
 namespace SRPlaylistManager.Services
 {
-    class PlaylistService
+    public class PlaylistService
     {
         private SRLogger logger;
 

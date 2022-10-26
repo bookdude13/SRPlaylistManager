@@ -1,4 +1,5 @@
 ﻿using HarmonyLib;
+using SRModCore;
 using Synth.SongSelection;
 using System;
 using System.Collections.Generic;
