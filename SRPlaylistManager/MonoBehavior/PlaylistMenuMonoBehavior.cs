@@ -14,6 +14,7 @@ namespace SRPlaylistManager.MonoBehavior
     {
         private SRLogger logger;
         private PlaylistService playlistService;
+        private ScrollablePanel playlistPanel;
 
         public PlaylistMenuMonoBehavior(SRLogger logger, PlaylistService playlistService)
         {
@@ -29,18 +30,28 @@ namespace SRPlaylistManager.MonoBehavior
             var centerView = SongSelectionView.GetView();
             centerView.SetVisibility(false);
 
-            // Add our playlist menu
-            var panel = ScrollablePanel.Create("playlist_panel");
-            panel.Panel.transform.parent = centerView.SelectionSongPanel.transform;
-            panel.SetVisibility(true);
+            // Create panel if needed
+            if (playlistPanel== null)
+            {
+                // Add our playlist menu
+                var panel = ScrollablePanel.Create("playlist_panel", () => centerView.SetVisibility(true));
+                panel.Panel.transform.parent = centerView.SelectionSongPanel.transform;
+                panel.SetVisibility(true);
 
-            // Add header
-            panel.AddHeader("playlists_header", "Playlists");
+                // Add button to close menu
+                //panel.AddCloseButton("Done");
+
+                // Add header
+                panel.AddHeader("playlists_header", "Playlists");
+
+                playlistPanel = panel;
+            }
 
             // Add items
+            playlistPanel.ClearItems();
             foreach (var playlist in playlists)
             {
-                panel.AddItem("playlist_item_" + playlist.Name, playlist.Name);
+                playlistPanel.AddItem("playlist_item_" + playlist.Name, playlist.Name);
             }
         }
     }
