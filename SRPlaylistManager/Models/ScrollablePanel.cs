@@ -33,11 +33,17 @@ namespace SRPlaylistManager.Models
             ItemContainer = itemContainer;
             OnClose = onClose;
 
-            // Set up back nav actions
+            SetUpBackNav();
+            
+            Console.Error.WriteLine("Created ScrollablePanel");
+        }
+
+        private void SetUpBackNav()
+        {
             Console.Error.WriteLine("Setting up button actions");
             try
             {
-                var backBtn = backNav.transform.Find("Scale Wrap/Button Wrap - Full/NavBarButton");
+                var backBtn = BackNav.transform.Find("Scale Wrap/Button Wrap - Full/NavBarButton");
                 if (backBtn == null)
                 {
                     Console.Error.WriteLine("Failed to find NavBarButton for back");
@@ -55,11 +61,11 @@ namespace SRPlaylistManager.Models
                 }
 
                 button.onClick.AddListener(Close);
-            } catch (Exception e)
+            }
+            catch (Exception e)
             {
                 Console.Error.WriteLine(e.ToString());
             }
-            Console.Error.WriteLine("Created ScrollablePanel");
         }
 
         public void SetVisibility(bool visible)
@@ -93,16 +99,11 @@ namespace SRPlaylistManager.Models
             Items.Clear();
         }
 
-        public void AddItem(string name, string text)
+        public void AddItem(PanelItem panelItem)
         {
-            GameObject newLabel = GameObject.Instantiate(ExistingItem, ExistingItem.transform.position, ExistingItem.transform.rotation, ItemContainer);
-            newLabel.name = name;
-            newLabel.GetComponentInChildren<Synth.Utils.LocalizationHelper>().enabled = false;
-            newLabel.transform.Find("Value Area").gameObject.SetActive(false);
-            newLabel.GetComponentInChildren<TMPro.TextMeshProUGUI>().SetText(text);
-            newLabel.GetComponent<VRTK.UnityEventHelper.VRTK_InteractableObject_UnityEvents>().enabled = false;
-            newLabel.SetActive(true);
-            Items.Add(newLabel);
+            GameObject newItem = GameObject.Instantiate(ExistingItem, ExistingItem.transform.position, ExistingItem.transform.rotation, ItemContainer);
+            var setUpItem = panelItem.Setup(newItem);
+            Items.Add(setUpItem);
         }
 
         public static ScrollablePanel Create(string name, Action onClose)

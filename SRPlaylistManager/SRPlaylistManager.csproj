@@ -76,6 +76,8 @@
   <ItemGroup>
     <Compile Include="Harmony\Patch_MultiplayerFavoritesController.ToggleFavorite.cs" />
     <Compile Include="Harmony\Patch_SongSelectionManager_ToggleFavorite.cs" />
+    <Compile Include="Models\PanelItem.cs" />
+    <Compile Include="Models\PlaylistPanelItem.cs" />
     <Compile Include="Models\SongSelectionView.cs" />
     <Compile Include="Models\ScrollablePanel.cs" />
     <Compile Include="MonoBehavior\PlaylistMenuMonoBehavior.cs" />

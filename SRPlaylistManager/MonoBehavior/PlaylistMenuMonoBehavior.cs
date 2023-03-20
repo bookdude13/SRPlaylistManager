@@ -1,12 +1,14 @@
 ﻿using SRModCore;
 using SRPlaylistManager.Models;
 using SRPlaylistManager.Services;
+using Synth.SongSelection;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
+using Util.Data;
 
 namespace SRPlaylistManager.MonoBehavior
 {
@@ -26,6 +28,10 @@ namespace SRPlaylistManager.MonoBehavior
         {
             var playlists = playlistService.GetPlaylists();
 
+            // Get currently selected song
+            var currentSong = GetCurrentSelectedSong();
+            logger.Msg($"Current song: '{currentSong.name}'");
+
             // Hide center panel
             var centerView = SongSelectionView.GetView();
             centerView.SetVisibility(false);
@@ -36,10 +42,6 @@ namespace SRPlaylistManager.MonoBehavior
                 // Add our playlist menu
                 var panel = ScrollablePanel.Create("playlist_panel", () => centerView.SetVisibility(true));
                 panel.Panel.transform.parent = centerView.SelectionSongPanel.transform;
-                panel.SetVisibility(true);
-
-                // Add button to close menu
-                //panel.AddCloseButton("Done");
 
                 // Add header
                 panel.AddHeader("playlists_header", "Playlists");
@@ -51,8 +53,38 @@ namespace SRPlaylistManager.MonoBehavior
             playlistPanel.ClearItems();
             foreach (var playlist in playlists)
             {
-                playlistPanel.AddItem("playlist_item_" + playlist.Name, playlist.Name);
+                var panelItem = new PlaylistPanelItem(playlist, currentSong, logger);
+                playlistPanel.AddItem(panelItem);
             }
+
+            // Show
+            playlistPanel.SetVisibility(true);
+        }
+
+        private PlaylistSong GetCurrentSelectedSong()
+        {
+            var selectedTrack = GetSelectedTrack();
+
+            // PlaylistManagementController
+            // Interface__OnSongSelectedForPlaylist
+
+            PlaylistSong currentSong = new PlaylistSong
+            {
+                name = selectedTrack.TrackName,
+                author = selectedTrack.Author,
+                beatmapper = (selectedTrack.IsCustomSong ? selectedTrack.Beatmapper : string.Empty),
+                difficulty = (int)Game_InfoProvider.s_instance.CurrentDifficulty,
+                hash = selectedTrack.LeaderboardHash,
+                trackDuration = (float)selectedTrack.DurationOnSeconds,
+                addedTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
+            };
+
+            return currentSong;
+        }
+
+        private Synth.Retro.Game_Track_Retro GetSelectedTrack()
+        {
+            return Synth.SongSelection.SongSelectionManager.GetInstance?.SelectedGameTrack;
         }
     }
 }
