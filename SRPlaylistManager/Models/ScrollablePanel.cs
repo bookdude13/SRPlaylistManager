@@ -191,7 +191,13 @@ namespace SRPlaylistManager.Models
                 return null;
             }
 
-            return GameObject.Instantiate(interfacePanel, interfacePanel.transform.position, interfacePanel.transform.rotation, interfacePanel.transform.parent);
+            var newPanel = GameObject.Instantiate(interfacePanel, interfacePanel.transform.position, interfacePanel.transform.rotation, interfacePanel.transform.parent);
+            
+            // The settings tab on the left offsets the main content - bring it back center
+            //var settingsTab = panel.Panel.transform.parent.Find("[Settings Tabs Layer]");
+            newPanel.transform.localPosition -= new Vector3(newPanel.transform.localPosition.x, 0, 0);
+
+            return newPanel;
         }
 
         private static GameObject CloneBackNavBar()
