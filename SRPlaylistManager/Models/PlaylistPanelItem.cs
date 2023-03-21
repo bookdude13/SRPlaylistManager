@@ -1,5 +1,6 @@
 ﻿using SRModCore;
 using Synth.Item;
+using Synth.Retro;
 using Synth.SongSelection;
 using Synth.Utils;
 using System;
@@ -13,26 +14,47 @@ using UnityEngine.UI;
 using Util.Controller;
 using Util.Data;
 using VRTK.UnityEventHelper;
+using static ChartLoaderTest;
 
 namespace SRPlaylistManager.Models
 {
     internal class PlaylistPanelItem : PanelItem
     {
-        /*public string Name { get; private set; }
-        public string Text { get; private set; }
-        public Color BGColor { get; private set; }*/
-
         private PlaylistItem PlaylistItem;
         private VRTK_InteractableObject_UnityEvents ItemEvents;
         private VRTKButtonHelper ItemButtonHelper;
-        private PlaylistSong SelectedSong;
+        private TMPro.TextMeshProUGUI Text;
         private SRLogger Logger;
 
-        public PlaylistPanelItem(PlaylistItem playlistItem, PlaylistSong selectedSong, SRLogger logger)
+        private Game_Track_Retro SelectedTrack;
+        private PlaylistSong SelectedSong;
+
+        public PlaylistPanelItem(PlaylistItem playlistItem, Game_Track_Retro selectedTrack, SRLogger logger)
         {
             PlaylistItem = playlistItem;
-            SelectedSong = selectedSong;
+            SelectedTrack = selectedTrack;
             Logger = logger;
+
+            SelectedSong = CreatePlaylistSongFromTrack(selectedTrack);
+        }
+        
+        private PlaylistSong CreatePlaylistSongFromTrack(Game_Track_Retro track)
+        {
+            // PlaylistManagementController
+            // Interface__OnSongSelectedForPlaylist
+
+            PlaylistSong currentSong = new PlaylistSong
+            {
+                name = track.TrackName,
+                author = track.Author,
+                beatmapper = (track.IsCustomSong ? track.Beatmapper : string.Empty),
+                difficulty = (int)Game_InfoProvider.s_instance.CurrentDifficulty,
+                hash = track.LeaderboardHash,
+                trackDuration = (float)track.DurationOnSeconds,
+                addedTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
+            };
+
+            return currentSong;
         }
 
         public GameObject Setup(GameObject item)
@@ -47,7 +69,8 @@ namespace SRPlaylistManager.Models
             item.transform.Find("Value Area").gameObject.SetActive(false);
 
             // Update text
-            item.GetComponentInChildren<TMPro.TextMeshProUGUI>().SetText(PlaylistItem.Name);
+            Text = item.GetComponentInChildren<TMPro.TextMeshProUGUI>();
+            Text.SetText(PlaylistItem.Name);
 
             // Set up as button toggle
             try
@@ -73,7 +96,7 @@ namespace SRPlaylistManager.Models
                 Logger.Error(ex.Message);
             }
 
-            // TODO update appearance if in list, and refresh after toggle
+            UpdateAppearance();
 
             // Show by default
             item.SetActive(true);
@@ -81,6 +104,82 @@ namespace SRPlaylistManager.Models
             return item;
         }
 
+        private void UpdateAppearance()
+        {
+            if (PlaylistItem.FixedPlaylist && PlaylistItem.ShowFavorites)
+            {
+                if (SelectedTrack.OnFavorites)
+                {
+                    // Difficulty is hard to get for favorites.
+                    // Just add stars for now
+                    SetAppearanceInPlaylist($"\u2606 | {PlaylistItem.Name}");
+                }
+                else
+                {
+                    SetAppearanceNotInPlaylist();
+                }
+            }
+            else
+            {
+                int existingIndex = GetExistingSongIndex(SelectedSong);
+                if (existingIndex >= 0)
+                {
+                    // Show difficulty in playlist as well
+                    int difficulty = PlaylistItem.Songs[existingIndex].difficulty;
+                    SetAppearanceInPlaylist($"({GetDifficultyAsName(difficulty)}) | {PlaylistItem.Name}");
+                }
+                else
+                {
+                    SetAppearanceNotInPlaylist();
+                }
+            }
+        }
+
+        private void SetAppearanceInPlaylist(string text)
+        {
+            Text.fontStyle = TMPro.FontStyles.Bold;
+            Text.color = Color.white;
+            Text.SetText(text);
+        }
+
+        private void SetAppearanceNotInPlaylist()
+        {
+            Text.fontStyle = TMPro.FontStyles.Normal;
+            Text.color = Color.gray;
+
+            Text.SetText($"{PlaylistItem.Name}");
+        }
+
+        /// <summary>
+        /// Converts difficulty index to human readable name.
+        /// Uses custom difficulty name if present.
+        /// </summary>
+        /// <returns></returns>
+        private string GetDifficultyAsName(int index)
+        {
+            switch (index) {
+                case 0:
+                    return "Easy";
+                case 1:
+                    return "Normal";
+                case 2:
+                    return "Hard";
+                case 3:
+                    return "Expert";
+                case 4:
+                    return "Master";
+                case 5:
+                    return SelectedTrack.CustomDiffName;
+                default:
+                    return "UNKNOWN";
+            }
+        }
+
+        /// <summary>
+        /// Button callback for toggling insert/remove of song to/from playlist
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void Toggle(object sender, VRTK.InteractableObjectEventArgs e)
         {
             // Favorites are handled separately
@@ -88,42 +187,41 @@ namespace SRPlaylistManager.Models
             {
                 ToggleFavorite();
             }
-
-            // See if the currently selected song is in us or not
-            int existingIndex = GetExistingSongIndex(SelectedSong);
-            if (existingIndex < 0)
-            {
-                AddToPlaylist(SelectedSong, existingIndex);
-            }
             else
             {
-                RemoveFromPlaylist(SelectedSong, existingIndex);
+                // See if the currently selected song is in us or not
+                int existingIndex = GetExistingSongIndex(SelectedSong);
+                if (existingIndex < 0)
+                {
+                    AddToPlaylist(SelectedSong, existingIndex);
+                }
+                else
+                {
+                    RemoveFromPlaylist(SelectedSong, existingIndex);
+                }
             }
+
+            UpdateAppearance();
         }
 
         private void ToggleFavorite()
         {
-            var songSelectMgr = SongSelectionManager.GetInstance;
-
-            // This should be the same as SelectedSong, just a different format
-            var selectedTrack = songSelectMgr.SelectedGameTrack;
-
             // Toggle
-            if (selectedTrack.OnFavorites)
+            if (SelectedTrack.OnFavorites)
             {
-                Logger.Msg($"Removing '{selectedTrack.TrackName}' from Favorites");
-                Game_InfoProvider.RemoveFromFavoritesList(selectedTrack.TrackName, selectedTrack.Author, selectedTrack.LeaderboardHash);
-                selectedTrack.OnFavorites = false;
+                Logger.Msg($"Removing '{SelectedTrack.TrackName}' from Favorites");
+                Game_InfoProvider.RemoveFromFavoritesList(SelectedTrack.TrackName, SelectedTrack.Author, SelectedTrack.LeaderboardHash);
+                SelectedTrack.OnFavorites = false;
             }
             else
             {
-                Logger.Msg($"Adding '{selectedTrack.TrackName}' to Favorites");
-                Game_InfoProvider.AddToFavoritesList(selectedTrack.TrackName, selectedTrack.Author, selectedTrack.LeaderboardHash);
-                selectedTrack.OnFavorites = true;
+                Logger.Msg($"Adding '{SelectedTrack.TrackName}' to Favorites");
+                Game_InfoProvider.AddToFavoritesList(SelectedTrack.TrackName, SelectedTrack.Author, SelectedTrack.LeaderboardHash);
+                SelectedTrack.OnFavorites = true;
             }
-            
+
             // Make sure the singleton is updated
-            songSelectMgr.SelectedGameTrack = selectedTrack;
+            SongSelectionManager.GetInstance.SelectedGameTrack = SelectedTrack;
         }
 
         /// <summary>

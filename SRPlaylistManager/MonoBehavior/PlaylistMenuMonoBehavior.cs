@@ -29,7 +29,7 @@ namespace SRPlaylistManager.MonoBehavior
             var playlists = playlistService.GetPlaylists();
 
             // Get currently selected song
-            var currentSong = GetCurrentSelectedSong();
+            var currentSong = GetSelectedTrack();
             logger.Msg($"Current song: '{currentSong.name}'");
 
             // Hide center panel
@@ -59,27 +59,6 @@ namespace SRPlaylistManager.MonoBehavior
 
             // Show
             playlistPanel.SetVisibility(true);
-        }
-
-        private PlaylistSong GetCurrentSelectedSong()
-        {
-            var selectedTrack = GetSelectedTrack();
-
-            // PlaylistManagementController
-            // Interface__OnSongSelectedForPlaylist
-
-            PlaylistSong currentSong = new PlaylistSong
-            {
-                name = selectedTrack.TrackName,
-                author = selectedTrack.Author,
-                beatmapper = (selectedTrack.IsCustomSong ? selectedTrack.Beatmapper : string.Empty),
-                difficulty = (int)Game_InfoProvider.s_instance.CurrentDifficulty,
-                hash = selectedTrack.LeaderboardHash,
-                trackDuration = (float)selectedTrack.DurationOnSeconds,
-                addedTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
-            };
-
-            return currentSong;
         }
 
         private Synth.Retro.Game_Track_Retro GetSelectedTrack()

@@ -15,7 +15,9 @@ namespace SRPlaylistManager.Harmony
         public static bool Prefix()
         {
             SRPlaylistManager.Instance?.OnToggleFavorite();
-            return true;
+
+            // Don't follow the normal "Add/Remove Favorites" logic
+            return false;
         }
     }
 }
