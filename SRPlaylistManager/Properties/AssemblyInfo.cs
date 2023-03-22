@@ -36,5 +36,5 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyVersion("1.0.0.0")]
 [assembly: AssemblyFileVersion("1.0.0.0")]
 
-[assembly: MelonInfo(typeof(SRPlaylistManager.MainMod), "SRPlaylistManager", "1.0.0", "bookdude13", "https://github.com/bookdude13/SRPlaylistManager")]
+[assembly: MelonInfo(typeof(SRPlaylistManager.SRPlaylistManager), "SRPlaylistManager", "1.0.0", "bookdude13", "https://github.com/bookdude13/SRPlaylistManager")]
 [assembly: MelonGame("Kluge Interactive", "SynthRiders")]

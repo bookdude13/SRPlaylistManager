@@ -1,0 +1,6 @@
+Known issues:
+- If you remove the song and add it back while still in the menu, it gets moved to the bottom
+
+To do:
+- move arrows for each song for reordering
+- Multiplayer support
