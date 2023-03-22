@@ -1,5 +1,8 @@
 ﻿using SRModCore;
+using SRPlaylistManager.MonoBehavior;
+using Synth.Data;
 using Synth.Item;
+using Synth.Lod;
 using Synth.Retro;
 using Synth.SongSelection;
 using Synth.Utils;
@@ -242,22 +245,48 @@ namespace SRPlaylistManager.Models
 
             Logger.Msg($"Found at difficulty '{songs[existingIndex].difficulty}'. Removing from playlist '{PlaylistItem.Name}'"); 
             songs.RemoveAt(existingIndex);
-            PlaylistItem.Songs = songs;
 
-            UpdateController();
+            // New playlist item created; to make equality check fail later??
+            UpdateController(CloneItemWithNewSongs(songs));
+
+            //PlaylistMenuMonoBehavior.OnMenuClosed += () => RefreshSelectedSong(existingIndex - 1);
         }
 
-        private void UpdateController()
+        private void UpdateController(PlaylistItem newItem)
         {
-            // Update controller
             var controller = PlaylistManagementController.GetInstance;
-            var playlistIdx = controller.UserPlaylistList.playlists.FindIndex(p => p.Name == PlaylistItem.Name && p.CreationDate == PlaylistItem.CreationDate);
-            if (playlistIdx < 0)
+            if (controller == null)
             {
-                Logger.Error($"Playlist '{PlaylistItem.Name}' not found in controller");
+                Logger.Error("Null playlist controller, not updating");
                 return;
             }
-            controller.UserPlaylistList.playlists[playlistIdx] = PlaylistItem;
+
+            // Update controller item
+            var playlistIdx = controller.UserPlaylistList.playlists.FindIndex(p => p.Name == newItem.Name && p.CreationDate == newItem.CreationDate);
+            if (playlistIdx < 0)
+            {
+                Logger.Error($"Playlist '{newItem.Name}' not found in controller");
+                return;
+            }
+            controller.UserPlaylistList.playlists[playlistIdx] = newItem;
+        }
+
+        private PlaylistItem CloneItemWithNewSongs(List<PlaylistSong> songs)
+        {
+            return new PlaylistItem
+            {
+                Songs = songs,
+                Name = PlaylistItem.Name,
+                Description = PlaylistItem.Description,
+                CurrentIndex = PlaylistItem.CurrentIndex,
+                SelectedIconIndex = PlaylistItem.SelectedIconIndex,
+                SelectedTexture = PlaylistItem.SelectedTexture,
+                GradientColor1 = PlaylistItem.GradientColor1,
+                GradientColor2 = PlaylistItem.GradientColor2,
+                TextColor = PlaylistItem.TextColor,
+                TextureColor = PlaylistItem.TextureColor,
+                CreationDate = PlaylistItem.CreationDate
+            };
         }
 
         /// <summary>
@@ -298,10 +327,38 @@ namespace SRPlaylistManager.Models
                 songs.Add(songToAdd);
             }
 
-            // Update list
-            PlaylistItem.Songs = songs;
+            // New playlist item created; to make equality check fail later??
+            UpdateController(CloneItemWithNewSongs(songs));
+        }
 
-            UpdateController();
+        private void RefreshSelectedSong(int selectedIndex)
+        {
+            var controller = PlaylistManagementController.GetInstance;
+
+            // Only select a song if we had one selected already and this is our playlist
+            if (controller.CurrentPlaylistIndex < 0)
+            {
+                Logger.Msg("Not in a playlist, so not clicking song");
+                return;
+            }
+            
+            var thisPlaylistSelected = controller.CurrentSelectedPlaylist.Name == PlaylistItem.Name && controller.CurrentSelectedPlaylist.CreationDate == PlaylistItem.CreationDate;
+            if (!thisPlaylistSelected)
+            {
+                Logger.Msg("The selected playlist is not this one; skipping song select");
+                return;
+            }
+
+            if (selectedIndex > PlaylistItem.Songs.Count - 1)
+            {
+                selectedIndex = PlaylistItem.Songs.Count - 1;
+            }
+            if (selectedIndex < 0)
+            {
+                selectedIndex = 0;
+            }
+
+            SongSelectionManager.GetInstance.OnSongItemClicked(selectedIndex);
         }
     }
 }

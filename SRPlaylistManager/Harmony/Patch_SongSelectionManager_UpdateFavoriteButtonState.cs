@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TMPro;
+using UnityEngine;
 using Util.Controller;
 
 namespace SRPlaylistManager.Harmony
@@ -18,6 +19,7 @@ namespace SRPlaylistManager.Harmony
             // Don't follow the normal text changes
             // TODO better text and do translation
             ___favoriteBtnLabel.SetText("Playlist", true);
+
             return false;
         }
     }

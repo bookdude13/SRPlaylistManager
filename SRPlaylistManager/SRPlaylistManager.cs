@@ -2,6 +2,7 @@
 using SRModCore;
 using SRPlaylistManager.MonoBehavior;
 using SRPlaylistManager.Services;
+using Synth.SongSelection;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -28,9 +29,9 @@ namespace SRPlaylistManager
             Instance = this;
         }
 
-        public void OnToggleFavorite()
+        public void OnTogglePlaylistButton()
         {
-            logger.Msg("Toggled favorite button");
+            logger.Msg("Toggled playlist button");
 
             if (menuMonoBehavior == null)
             {

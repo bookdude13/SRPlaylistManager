@@ -5,12 +5,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TMPro;
+using UnityEngine;
 using Util.Controller;
 
 namespace SRPlaylistManager.Harmony
 {
-    [HarmonyPatch(typeof(MultiplayerFavoritesController), nameof(MultiplayerFavoritesController.ToggleFavorite))]
-    public class Patch_MultiplayerFavoritesController_ToggleFavorite
+    [HarmonyPatch(typeof(PlaylistManagementController), nameof(PlaylistManagementController.Interface__TryDeleteSongFromPlaylist))]
+    public class Patch_PlaylistManagementController_Interface__TryDeleteSongFromPlaylist
     {
         public static bool Prefix()
         {

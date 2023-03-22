@@ -1,4 +1,1 @@
-Indication of song in playlist or not
-Toggle song in playlist - how to handle diff difficulties? Just one per, replace diff
-Replace all buttons and rename, SP, party, MP
-Do something with lower playlist selection button(s)?
+Still need to test Party, MP
