@@ -9,7 +9,7 @@ using Util.Controller;
 
 namespace SRPlaylistManager.Harmony
 {
-    [HarmonyPatch(typeof(MultiplayerFavoritesController), nameof(MultiplayerFavoritesController.ToggleFavorite))]
+    /*[HarmonyPatch(typeof(MultiplayerFavoritesController), nameof(MultiplayerFavoritesController.ToggleFavorite))]
     public class Patch_MultiplayerFavoritesController_ToggleFavorite
     {
         public static bool Prefix()
@@ -19,5 +19,5 @@ namespace SRPlaylistManager.Harmony
             // Don't follow the normal "Add/Remove Favorites" logic
             return false;
         }
-    }
+    }*/
 }
