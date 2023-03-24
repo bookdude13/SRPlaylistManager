@@ -262,7 +262,8 @@ namespace SRPlaylistManager.Models
             }
 
             // Update controller item
-            var playlistIdx = controller.UserPlaylistList.playlists.FindIndex(p => p.Name == newItem.Name && p.CreationDate == newItem.CreationDate);
+            // Creation date used as unique id
+            var playlistIdx = controller.UserPlaylistList.playlists.FindIndex(p => p.CreationDate == newItem.CreationDate);
             if (playlistIdx < 0)
             {
                 Logger.Error($"Playlist '{newItem.Name}' not found in controller");
@@ -329,36 +330,6 @@ namespace SRPlaylistManager.Models
 
             // New playlist item created; to make equality check fail later??
             UpdateController(CloneItemWithNewSongs(songs));
-        }
-
-        private void RefreshSelectedSong(int selectedIndex)
-        {
-            var controller = PlaylistManagementController.GetInstance;
-
-            // Only select a song if we had one selected already and this is our playlist
-            if (controller.CurrentPlaylistIndex < 0)
-            {
-                Logger.Msg("Not in a playlist, so not clicking song");
-                return;
-            }
-            
-            var thisPlaylistSelected = controller.CurrentSelectedPlaylist.Name == PlaylistItem.Name && controller.CurrentSelectedPlaylist.CreationDate == PlaylistItem.CreationDate;
-            if (!thisPlaylistSelected)
-            {
-                Logger.Msg("The selected playlist is not this one; skipping song select");
-                return;
-            }
-
-            if (selectedIndex > PlaylistItem.Songs.Count - 1)
-            {
-                selectedIndex = PlaylistItem.Songs.Count - 1;
-            }
-            if (selectedIndex < 0)
-            {
-                selectedIndex = 0;
-            }
-
-            SongSelectionManager.GetInstance.OnSongItemClicked(selectedIndex);
         }
     }
 }
