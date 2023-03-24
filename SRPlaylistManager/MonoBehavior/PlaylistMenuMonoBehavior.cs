@@ -42,7 +42,6 @@ namespace SRPlaylistManager.MonoBehavior
 
             // Hide center panel
             var centerView = SongSelectionView.GetView();
-            centerView.SetVisibility(false);
 
             // Create panel if needed
             if (playlistPanel== null)
@@ -67,6 +66,7 @@ namespace SRPlaylistManager.MonoBehavior
 
             // Show
             playlistPanel.SetVisibility(true);
+            centerView.SetVisibility(false);
         }
 
         private Synth.Retro.Game_Track_Retro GetSelectedTrack()
@@ -76,9 +76,12 @@ namespace SRPlaylistManager.MonoBehavior
 
         private void OnMenuClose(SongSelectionView centerView)
         {
+            // Try to open center view again
+            _logger.Msg("Menu close, showing center view again");
             centerView.SetVisibility(true);
 
             // Now that we're visible again, refresh the playlist view's visuals if needed
+            _logger.Msg("Refreshing playlist view");
             RefreshCurrentPlaylistView();
 
             // Select at the current index, if any
@@ -87,6 +90,7 @@ namespace SRPlaylistManager.MonoBehavior
             if (currentPlist?.FixedPlaylist ?? true)
             {
                 // No easy way to check bounds, so just try and hope
+                _logger.Msg("Fixed playlist, selecting song idx " + songPlaylistIndexBeforeOpen);
                 if (songPlaylistIndexBeforeOpen >= 0)
                 {
                     try
@@ -111,15 +115,26 @@ namespace SRPlaylistManager.MonoBehavior
                 if (songPlaylistIndexBeforeOpen > currPlaylistSongCount - 1)
                 {
                     songPlaylistIndexBeforeOpen = currPlaylistSongCount - 1;
+                    _logger.Msg("Index too big, changed to " + songPlaylistIndexBeforeOpen);
                 }
-                if (songPlaylistIndexBeforeOpen >= 0)
+
+                if (songPlaylistIndexBeforeOpen < 0)
                 {
+                    _logger.Msg("Index out of range, not clicking song");
+                }
+                else
+                {
+                    _logger.Msg("Custom playlist, clicking song at index " + songPlaylistIndexBeforeOpen);
                     SongSelectionManager.GetInstance?.OnSongItemClicked(songPlaylistIndexBeforeOpen);
 
                     // Resume audio when selecting as well
                     SongSelectionManager.GetInstance.PlayPreviewAudio(true);
                 }
             }
+
+            // Now that the extra click has happened, make sure the center view is still visible
+            _logger.Msg("Second check for center view visible");
+            centerView.SetVisibility(true);
         }
 
         public static void RefreshCurrentPlaylistView()
