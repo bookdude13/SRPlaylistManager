@@ -1,6 +1,7 @@
 ﻿using SRModCore;
 using SRPlaylistManager.Models;
 using SRPlaylistManager.Services;
+using Synth.Item;
 using Synth.SongSelection;
 using System;
 using System.Collections.Generic;
@@ -33,6 +34,11 @@ namespace SRPlaylistManager.MonoBehavior
 
             // Get currently selected song
             var currentSong = GetSelectedTrack();
+            if (currentSong == null)
+            {
+                _logger.Error("Current selected song null; not opening menu");
+                return;
+            }
             _logger.Msg($"Current song: '{currentSong.name}'");
 
             // Stop any songs that are playing
@@ -111,6 +117,8 @@ namespace SRPlaylistManager.MonoBehavior
             else
             {
                 // User playlist
+
+                // Select current song item
                 var currPlaylistSongCount = currentPlist?.Songs.Count ?? 0;
                 if (songPlaylistIndexBeforeOpen > currPlaylistSongCount - 1)
                 {

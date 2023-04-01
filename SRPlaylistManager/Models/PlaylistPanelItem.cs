@@ -196,11 +196,11 @@ namespace SRPlaylistManager.Models
                 int existingIndex = GetExistingSongIndex(SelectedSong);
                 if (existingIndex < 0)
                 {
-                    AddToPlaylist(SelectedSong, existingIndex);
+                    AddToPlaylist(SelectedSong);
                 }
                 else
                 {
-                    RemoveFromPlaylist(SelectedSong, existingIndex);
+                    RemoveFromPlaylist(SelectedSong);
                 }
             }
 
@@ -229,22 +229,16 @@ namespace SRPlaylistManager.Models
 
         /// <summary>
         /// Removes the song from the given index in the current playlist.
-        /// TODO remove all instances of the hash match?
         /// </summary>
         /// <param name="songToRemove"></param>
-        /// <param name="existingIndex"></param>
-        private void RemoveFromPlaylist(PlaylistSong songToRemove, int existingIndex)
+        private void RemoveFromPlaylist(PlaylistSong songToRemove)
         {
-            List<PlaylistSong> songs = PlaylistItem.Songs;
+            List<PlaylistSong> songs = GetSongsNotMatching(songToRemove);
+            var numRemoved = PlaylistItem.Songs.Count - songs.Count;
+            Logger.Msg($"Removing {numRemoved} instances of '{songToRemove.name}' from playlist '{PlaylistItem.Name}'");
 
-            if (existingIndex < 0)
-            {
-                Logger.Error($"Song '{songToRemove.name}' not found in playlist '{PlaylistItem.Name}'; cannot remove");
-                return;
-            }
-
-            Logger.Msg($"Found at difficulty '{songs[existingIndex].difficulty}'. Removing from playlist '{PlaylistItem.Name}'"); 
-            songs.RemoveAt(existingIndex);
+            // Update our reference to the song list
+            PlaylistItem.Songs = songs;
 
             // New playlist item created; to make equality check fail later??
             UpdateController(CloneItemWithNewSongs(songs));
@@ -308,25 +302,32 @@ namespace SRPlaylistManager.Models
                 }
 
                 // Fall back on name and author match
-                return x.name.ToLower().Equals(song.name.ToLower()) && x.author.ToLower().Equals(song.author.ToLower());
+                return SongsMatchNameAuthor(x, song);
             });
         }
 
-        private void AddToPlaylist(PlaylistSong songToAdd, int existingIndex)
+        private bool SongsMatchNameAuthor(PlaylistSong a, PlaylistSong b)
         {
-            List<PlaylistSong> songs = PlaylistItem.Songs;
+            return a.name.ToLower().Equals(b.name.ToLower()) && a.author.ToLower().Equals(b.author.ToLower());
+        }
 
-            // Add or replace
-            if (existingIndex >= 0)
-            {
-                Logger.Msg($"Replacing song '{songToAdd.name}' to playlist '{PlaylistItem.Name}' at index {existingIndex}");
-                songs[existingIndex] = songToAdd;
-            }
-            else
-            {
-                Logger.Msg($"Adding song '{songToAdd.name}' to end of playlist '{PlaylistItem.Name}'");
-                songs.Add(songToAdd);
-            }
+        private List<PlaylistSong> GetSongsNotMatching(PlaylistSong original)
+        {
+            // Remove duplicates that have different hashes but matching name+author
+            // This catches drafts with changing hashes / out of date
+            return PlaylistItem.Songs.Where(song => !SongsMatchNameAuthor(song, original)).ToList();
+        }
+
+        private void AddToPlaylist(PlaylistSong songToAdd)
+        {
+            List<PlaylistSong> songs = GetSongsNotMatching(songToAdd);
+            var numDuplicates = PlaylistItem.Songs.Count - songs.Count;
+
+            Logger.Msg($"Adding song '{songToAdd.name}' to end of playlist '{PlaylistItem.Name}'. {numDuplicates} duplicates removed.");
+            songs.Add(songToAdd);
+
+            // Update our reference to the song list
+            PlaylistItem.Songs = songs;
 
             // New playlist item created; to make equality check fail later??
             UpdateController(CloneItemWithNewSongs(songs));
