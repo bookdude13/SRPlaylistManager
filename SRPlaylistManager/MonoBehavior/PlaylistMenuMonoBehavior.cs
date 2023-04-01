@@ -107,11 +107,6 @@ namespace SRPlaylistManager.MonoBehavior
                     {
                         _logger.Error("Failed to select song after menu close", ex);
                     }
-
-                    // Resume audio when selecting as well
-                    // Just assume that this isn't an empty Favorites list or something
-                    // Call it an Easter Egg...
-                    SongSelectionManager.GetInstance.PlayPreviewAudio(true);
                 }
             }
             else
@@ -134,15 +129,16 @@ namespace SRPlaylistManager.MonoBehavior
                 {
                     _logger.Msg("Custom playlist, clicking song at index " + songPlaylistIndexBeforeOpen);
                     SongSelectionManager.GetInstance?.OnSongItemClicked(songPlaylistIndexBeforeOpen);
-
-                    // Resume audio when selecting as well
-                    SongSelectionManager.GetInstance.PlayPreviewAudio(true);
                 }
             }
 
             // Now that the extra click has happened, make sure the center view is still visible
             _logger.Msg("Second check for center view visible");
             centerView.SetVisibility(true);
+
+            // Resume audio
+            SongSelectionManager.GetInstance?.PlayPreviewAudio(true);
+
         }
 
         public static void RefreshCurrentPlaylistView()
