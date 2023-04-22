@@ -15,14 +15,16 @@ using Util.Data;
 
 namespace SRPlaylistManager.MonoBehavior
 {
-    class PlaylistMenuMonoBehavior
+    class PlaylistMenuMonoBehavior : MonoBehaviour
     {
         private static SRLogger _logger;
         private PlaylistService playlistService;
         private ScrollablePanel playlistPanel;
         private int songPlaylistIndexBeforeOpen = -1;
 
-        public PlaylistMenuMonoBehavior(SRLogger logger, PlaylistService playlistService)
+        public PlaylistMenuMonoBehavior () { }
+
+        public void Init(SRLogger logger, PlaylistService playlistService)
         {
             _logger = logger;
             this.playlistService = playlistService;
@@ -42,7 +44,7 @@ namespace SRPlaylistManager.MonoBehavior
             _logger.Msg($"Current song: '{currentSong.name}'");
 
             // Stop any songs that are playing
-            SongSelectionManager.GetInstance.StopPreviewAudio();
+            SongSelectionManager.GetInstance?.StopPreviewAudio();
 
             songPlaylistIndexBeforeOpen = currentSong.SearchIndex;
 
@@ -50,10 +52,10 @@ namespace SRPlaylistManager.MonoBehavior
             var centerView = SongSelectionView.GetView();
 
             // Create panel if needed
-            if (playlistPanel== null)
+            if (playlistPanel == null)
             {
                 // Add our playlist menu
-                var panel = ScrollablePanel.Create("playlist_panel", () => OnMenuClose(centerView));
+                var panel = ScrollablePanel.Create("playlist_panel", () => OnMenuClose(centerView), _logger);
                 panel.Panel.transform.parent = centerView.SelectionSongPanel.transform;
 
                 // Add header
