@@ -1,5 +1,5 @@
 
-set BUILT_VERSION=1.1.0
+set BUILT_VERSION=1.1.1
 set MOD_NAME=SRPlaylistManager
 
 set RELEASE_BUILD_DIR=.\%MOD_NAME%\bin\Release
