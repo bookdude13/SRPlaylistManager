@@ -2,14 +2,7 @@
 using SRModCore;
 using SRPlaylistManager.MonoBehavior;
 using SRPlaylistManager.Services;
-using Synth.SongSelection;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
-using static MelonLoader.MelonLogger;
 
 namespace SRPlaylistManager
 {
@@ -21,9 +14,9 @@ namespace SRPlaylistManager
         private PlaylistService playlistService;
         private PlaylistMenuMonoBehavior menuMonoBehavior = null;
 
-        public override void OnApplicationStart()
+        public override void OnInitializeMelon()
         {
-            base.OnApplicationStart();
+            base.OnInitializeMelon();
 
             logger = new MelonLoggerWrapper(LoggerInstance);
             playlistService = new PlaylistService(logger);
