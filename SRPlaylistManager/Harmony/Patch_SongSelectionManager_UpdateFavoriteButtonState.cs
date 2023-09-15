@@ -1,17 +1,17 @@
 ﻿using HarmonyLib;
-using Synth.SongSelection;
+using Il2CppSynth.SongSelection;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using TMPro;
+using Il2CppTMPro;
 using UnityEngine;
-using Util.Controller;
+using Il2CppUtil.Controller;
 
 namespace SRPlaylistManager.Harmony
 {
-    [HarmonyPatch(typeof(SongSelectionManager), "UpdateFavoriteButtonState")]
+    /*[HarmonyPatch(typeof(SongSelectionManager), "UpdateFavoriteButtonState")]
     public class Patch_SongSelectionManager_UpdateFavoriteButtonState
     {
         public static bool Prefix(TMP_Text ___favoriteBtnLabel)
@@ -22,5 +22,5 @@ namespace SRPlaylistManager.Harmony
 
             return false;
         }
-    }
+    }*/
 }

@@ -1,8 +1,8 @@
 ﻿using SRModCore;
 using SRPlaylistManager.Models;
 using SRPlaylistManager.Services;
-using Synth.Item;
-using Synth.SongSelection;
+using Il2CppSynth.Item;
+using Il2CppSynth.SongSelection;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,11 +10,13 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
-using Util.Controller;
-using Util.Data;
+using Il2CppUtil.Controller;
+using Il2CppUtil.Data;
+using MelonLoader;
 
 namespace SRPlaylistManager.MonoBehavior
 {
+    [RegisterTypeInIl2Cpp]
     class PlaylistMenuMonoBehavior : MonoBehaviour
     {
         private static SRLogger _logger;
@@ -77,9 +79,9 @@ namespace SRPlaylistManager.MonoBehavior
             centerView.SetVisibility(false);
         }
 
-        private Synth.Retro.Game_Track_Retro GetSelectedTrack()
+        private Il2CppSynth.Retro.Game_Track_Retro GetSelectedTrack()
         {
-            return Synth.SongSelection.SongSelectionManager.GetInstance?.SelectedGameTrack;
+            return Il2CppSynth.SongSelection.SongSelectionManager.GetInstance?.SelectedGameTrack;
         }
 
         private void OnMenuClose(SongSelectionView centerView)

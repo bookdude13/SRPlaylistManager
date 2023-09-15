@@ -1,32 +1,33 @@
 ﻿using SRModCore;
 using SRPlaylistManager.MonoBehavior;
-using Synth.Data;
-using Synth.Item;
-using Synth.Lod;
-using Synth.Retro;
-using Synth.SongSelection;
-using Synth.Utils;
+using Il2CppSynth.Data;
+using Il2CppSynth.Item;
+using Il2CppSynth.Lod;
+using Il2Cpp;
+using Il2CppSynth.Retro;
+using Il2CppSynth.SongSelection;
+using Il2CppSynth.Utils;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
-using Util.Controller;
-using Util.Data;
-using VRTK.UnityEventHelper;
-using static ChartLoaderTest;
+using Il2CppUtil.Controller;
+using Il2CppUtil.Data;
+//using Il2CppVRTK.UnityEventHelper;
+//using static ChartLoaderTest;
 
 namespace SRPlaylistManager.Models
 {
     internal class PlaylistPanelItem : PanelItem
     {
         private PlaylistItem PlaylistItem;
-        private VRTK_InteractableObject_UnityEvents ItemEvents;
+        //private VRTK_InteractableObject_UnityEvents ItemEvents;
+        private Il2Cpp.SynthUIButton ItemButton;
         private VRTKButtonHelper ItemButtonHelper;
-        private TMPro.TextMeshProUGUI Text;
+        private Il2CppTMPro.TextMeshProUGUI Text;
         private SRLogger Logger;
 
         private Game_Track_Retro SelectedTrack;
@@ -53,7 +54,7 @@ namespace SRPlaylistManager.Models
                 beatmapper = (track.IsCustomSong ? track.Beatmapper : string.Empty),
                 difficulty = (int)Game_InfoProvider.s_instance.CurrentDifficulty,
                 hash = track.LeaderboardHash,
-                trackDuration = (float)track.DurationOnSeconds,
+                trackDuration = (float)track.DurationInSeconds,
                 addedTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
             };
 
@@ -66,24 +67,31 @@ namespace SRPlaylistManager.Models
             item.name = "playlist_item_" + PlaylistItem.Name;
 
             // Stop text from being changed from localization running
-            item.GetComponentInChildren<Synth.Utils.LocalizationHelper>().enabled = false;
+            item.GetComponentInChildren<Il2CppSynth.Utils.LocalizationHelper>().enabled = false;
 
             // Remove unused area?
             item.transform.Find("Value Area").gameObject.SetActive(false);
 
             // Update text
-            Text = item.GetComponentInChildren<TMPro.TextMeshProUGUI>();
+            Text = item.GetComponentInChildren<Il2CppTMPro.TextMeshProUGUI>();
             Text.SetText(PlaylistItem.Name);
 
             // Set up as button toggle
             try
             {
-                ItemEvents = item.GetComponent<VRTK_InteractableObject_UnityEvents>();
+                //ItemEvents = item.GetComponent<VRTK_InteractableObject_UnityEvents>();
+                ItemButton = item.GetComponent<SynthUIButton>();
                 ItemButtonHelper = item.AddComponent<VRTKButtonHelper>();
 
-                ItemEvents.enabled = true;
+                ItemButton.enabled = true;
 
-                ItemEvents.OnUse.RemoveAllListeners();
+                // Directly removing persistent listeners doesn't work
+                // See https://forum.unity.com/threads/documentation-unityevent-removealllisteners-only-removes-non-persistent-listeners.341796/
+                // But...it looks like the persistent listener just calls the synth button.
+                // Wiping out the WhenClicked callback gets rid of old behavior
+                // and lets us add our own callbacks without any hassle
+                ItemButton.WhenClicked = new UnityEvent();
+                /*ItemEvents.OnUse.RemoveAllListeners();
                 var num = ItemEvents.OnUse.GetPersistentEventCount();
                 for (var i = 0; i < num; i++)
                 {
@@ -91,7 +99,8 @@ namespace SRPlaylistManager.Models
                     ItemEvents.OnUse.SetPersistentListenerState(i, UnityEventCallState.Off);
                 }
 
-                ItemEvents.OnUse.AddListener(Toggle);
+                ItemEvents.OnUse.AddListener(Toggle);*/
+                ItemButton.WhenClicked.AddListener(new Action(() => Toggle()));
                 ItemButtonHelper.SetActive();
             }
             catch (Exception ex)
@@ -140,14 +149,14 @@ namespace SRPlaylistManager.Models
 
         private void SetAppearanceInPlaylist(string text)
         {
-            Text.fontStyle = TMPro.FontStyles.Bold;
+            Text.fontStyle = Il2CppTMPro.FontStyles.Bold;
             Text.color = Color.white;
             Text.SetText(text);
         }
 
         private void SetAppearanceNotInPlaylist()
         {
-            Text.fontStyle = TMPro.FontStyles.Normal;
+            Text.fontStyle = Il2CppTMPro.FontStyles.Normal;
             Text.color = Color.gray;
 
             Text.SetText($"{PlaylistItem.Name}");
@@ -181,9 +190,7 @@ namespace SRPlaylistManager.Models
         /// <summary>
         /// Button callback for toggling insert/remove of song to/from playlist
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void Toggle(object sender, VRTK.InteractableObjectEventArgs e)
+        private void Toggle()
         {
             // Favorites are handled separately
             if (PlaylistItem.FixedPlaylist && PlaylistItem.ShowFavorites)
@@ -233,7 +240,7 @@ namespace SRPlaylistManager.Models
         /// <param name="songToRemove"></param>
         private void RemoveFromPlaylist(PlaylistSong songToRemove)
         {
-            List<PlaylistSong> songs = GetSongsNotMatching(songToRemove);
+            var songs = GetSongsNotMatching(songToRemove);
             var numRemoved = PlaylistItem.Songs.Count - songs.Count;
             Logger.Msg($"Removing {numRemoved} instances of '{songToRemove.name}' from playlist '{PlaylistItem.Name}'");
 
@@ -257,7 +264,9 @@ namespace SRPlaylistManager.Models
 
             // Update controller item
             // Creation date used as unique id
-            var playlistIdx = controller.UserPlaylistList.playlists.FindIndex(p => p.CreationDate == newItem.CreationDate);
+            var playlistIdx = controller.UserPlaylistList.playlists.FindIndex(
+                new System.Func<PlaylistItem, bool>(p => p.CreationDate == newItem.CreationDate)
+            );
             if (playlistIdx < 0)
             {
                 Logger.Error($"Playlist '{newItem.Name}' not found in controller");
@@ -266,7 +275,7 @@ namespace SRPlaylistManager.Models
             controller.UserPlaylistList.playlists[playlistIdx] = newItem;
         }
 
-        private PlaylistItem CloneItemWithNewSongs(List<PlaylistSong> songs)
+        private PlaylistItem CloneItemWithNewSongs(Il2CppSystem.Collections.Generic.List<PlaylistSong> songs)
         {
             return new PlaylistItem
             {
@@ -293,7 +302,7 @@ namespace SRPlaylistManager.Models
         /// <returns></returns>
         private int GetExistingSongIndex(PlaylistSong song)
         {
-            return PlaylistItem.Songs.FindIndex(delegate (PlaylistSong x)
+            Func<PlaylistSong, bool> findFunc = delegate (PlaylistSong x)
             {
                 // Based on hash primarily
                 if (!string.IsNullOrEmpty(x.hash))
@@ -303,7 +312,8 @@ namespace SRPlaylistManager.Models
 
                 // Fall back on name and author match
                 return SongsMatchNameAuthor(x, song);
-            });
+            };
+            return PlaylistItem.Songs.FindIndex(findFunc);
         }
 
         private bool SongsMatchNameAuthor(PlaylistSong a, PlaylistSong b)
@@ -311,16 +321,24 @@ namespace SRPlaylistManager.Models
             return a.name.ToLower().Equals(b.name.ToLower()) && a.author.ToLower().Equals(b.author.ToLower());
         }
 
-        private List<PlaylistSong> GetSongsNotMatching(PlaylistSong original)
+        private Il2CppSystem.Collections.Generic.List<PlaylistSong> GetSongsNotMatching(PlaylistSong original)
         {
             // Remove duplicates that have different hashes but matching name+author
             // This catches drafts with changing hashes / out of date
-            return PlaylistItem.Songs.Where(song => !SongsMatchNameAuthor(song, original)).ToList();
+            var deduplicated = new Il2CppSystem.Collections.Generic.List<PlaylistSong>();
+            foreach (PlaylistSong song in PlaylistItem.Songs)
+            {
+                if (!SongsMatchNameAuthor(song, original))
+                {
+                    deduplicated.Add(song);
+                }
+            }
+            return deduplicated;
         }
 
         private void AddToPlaylist(PlaylistSong songToAdd)
         {
-            List<PlaylistSong> songs = GetSongsNotMatching(songToAdd);
+            var songs = GetSongsNotMatching(songToAdd);
             var numDuplicates = PlaylistItem.Songs.Count - songs.Count;
 
             Logger.Msg($"Adding song '{songToAdd.name}' to end of playlist '{PlaylistItem.Name}'. {numDuplicates} duplicates removed.");

@@ -1,17 +1,17 @@
 ﻿using HarmonyLib;
-using Synth.SongSelection;
+using Il2CppSynth.SongSelection;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using TMPro;
+using Il2CppTMPro;
 using UnityEngine;
-using Util.Controller;
+using Il2CppUtil.Controller;
 
 namespace SRPlaylistManager.Harmony
 {
-    [HarmonyPatch(typeof(PlaylistManagementController), nameof(PlaylistManagementController.TryDisplayCorrectRemoveFavoriteButton))]
+    /*[HarmonyPatch(typeof(PlaylistManagementController), nameof(PlaylistManagementController.TryDisplayCorrectRemoveFavoriteButton))]
     public class Patch_PlaylistManagementController_TryDisplayCorrectRemoveFavoriteButton
     {
         public static void Postfix(GameObject ___pf_RemoveFromPlaylistButton, GameObject ___pf_SongAddFavoriteButton)
@@ -22,5 +22,5 @@ namespace SRPlaylistManager.Harmony
             // Hide icon. Still off-center, but not as obviously a different button :)
             ___pf_SongAddFavoriteButton?.transform.Find("Icon")?.gameObject.SetActive(false);
         }
-    }
+    }*/
 }

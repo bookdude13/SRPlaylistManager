@@ -1,9 +1,9 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.3.32819.101
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SRPlaylistManager", "SRPlaylistManager.csproj", "{2A3FFEC0-C394-42DF-9371-ECE6A0A2D05E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SRPlaylistManager", "SRPlaylistManager.csproj", "{2A3FFEC0-C394-42DF-9371-ECE6A0A2D05E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

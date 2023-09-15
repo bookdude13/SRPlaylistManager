@@ -31,12 +31,14 @@ namespace SRPlaylistManager
 
             if (scene.SceneType == SRScene.SRSceneType.MAIN_MENU)
             {
+                var zWrap = GameObject.Find("Main Stage Prefab/Z-Wrap");
                 var gameObjectName = "srplaylistmanager_menu";
-                var playlistGO = GameObject.Find(gameObjectName);
+                var playlistGO = zWrap.transform.Find(gameObjectName)?.gameObject;
                 if (playlistGO == null)
                 {
                     logger.Msg("Playlist GO not found; creating...");
                     playlistGO = new GameObject("srplaylistmanager_menu");
+                    playlistGO.transform.SetParent(zWrap.transform, false);
                     menuMonoBehavior = playlistGO.AddComponent<PlaylistMenuMonoBehavior>();
                     menuMonoBehavior.Init(logger, playlistService);
                 }

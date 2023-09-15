@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Il2Cpp;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -51,7 +52,12 @@ namespace SRPlaylistManager.Models
                     _logger.Error("Failed to find NavBarButton for back");
                     return;
                 }
-                var button = backBtn.GetComponentInChildren<UnityEngine.UI.Button>(true);
+
+                var button = backBtn.GetComponentInChildren<Il2Cpp.SynthUIButton>();
+                button.WhenClicked = new UnityEvent();
+                button.WhenClicked.AddListener(new Action(() => Close()));
+
+                /*var button = backBtn.GetComponentInChildren<UnityEngine.UI.Button>(true);
                 button.onClick.RemoveAllListeners();
 
                 var num = button.onClick.GetPersistentEventCount();
@@ -62,7 +68,7 @@ namespace SRPlaylistManager.Models
                     button.onClick.SetPersistentListenerState(i, UnityEventCallState.Off);
                 }
 
-                button.onClick.AddListener(Close);
+                button.onClick.AddListener(Close);*/
             }
             catch (Exception e)
             {
@@ -87,8 +93,8 @@ namespace SRPlaylistManager.Models
         {
             GameObject newHeader = GameObject.Instantiate(ExistingHeader, ExistingHeader.transform.position, ExistingHeader.transform.rotation, ItemContainer);
             newHeader.name = name;
-            newHeader.GetComponentInChildren<Synth.Utils.LocalizationHelper>().enabled = false;
-            newHeader.GetComponentInChildren<TMPro.TextMeshProUGUI>().SetText(text);
+            newHeader.GetComponentInChildren<Il2CppSynth.Utils.LocalizationHelper>().enabled = false;
+            newHeader.GetComponentInChildren<Il2CppTMPro.TextMeshProUGUI>().SetText(text);
             newHeader.SetActive(true);
         }
 

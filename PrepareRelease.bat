@@ -2,7 +2,7 @@
 set BUILT_VERSION=1.2.0
 set MOD_NAME=SRPlaylistManager
 
-set RELEASE_BUILD_DIR=.\%MOD_NAME%\bin\Release
+set RELEASE_BUILD_DIR=.\%MOD_NAME%\bin\Release\net6.0
 set MAIN_DLL=%RELEASE_BUILD_DIR%\%MOD_NAME%.dll
 set LIB_DLL_DIR=%RELEASE_BUILD_DIR%\libs
 
