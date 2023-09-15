@@ -10,7 +10,7 @@ using Il2CppUtil.Controller;
 
 namespace SRPlaylistManager.Harmony
 {
-    /*[HarmonyPatch(typeof(PlaylistManagementController), nameof(PlaylistManagementController.Interface__TryDeleteSongFromPlaylist))]
+    [HarmonyPatch(typeof(PlaylistManagementController), nameof(PlaylistManagementController.Interface__TryDeleteSongFromPlaylist))]
     public class Patch_PlaylistManagementController_Interface__TryDeleteSongFromPlaylist
     {
         public static bool Prefix()
@@ -20,5 +20,5 @@ namespace SRPlaylistManager.Harmony
             // Don't follow the normal "Add/Remove Favorites" logic
             return false;
         }
-    }*/
+    }
 }

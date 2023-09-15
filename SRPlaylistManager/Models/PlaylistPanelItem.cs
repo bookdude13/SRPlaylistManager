@@ -16,6 +16,7 @@ using UnityEngine.Events;
 using UnityEngine.UI;
 using Il2CppUtil.Controller;
 using Il2CppUtil.Data;
+using System.Xml.Linq;
 //using Il2CppVRTK.UnityEventHelper;
 //using static ChartLoaderTest;
 
@@ -46,7 +47,7 @@ namespace SRPlaylistManager.Models
         {
             // PlaylistManagementController
             // Interface__OnSongSelectedForPlaylist
-
+            
             PlaylistSong currentSong = new PlaylistSong
             {
                 name = track.TrackName,
@@ -69,8 +70,8 @@ namespace SRPlaylistManager.Models
             // Stop text from being changed from localization running
             item.GetComponentInChildren<Il2CppSynth.Utils.LocalizationHelper>().enabled = false;
 
-            // Remove unused area?
-            item.transform.Find("Value Area").gameObject.SetActive(false);
+            // Remove unused area if found
+            item.transform.Find("Background/Value Area").gameObject.SetActive(false);
 
             // Update text
             Text = item.GetComponentInChildren<Il2CppTMPro.TextMeshProUGUI>();
@@ -264,14 +265,21 @@ namespace SRPlaylistManager.Models
 
             // Update controller item
             // Creation date used as unique id
-            var playlistIdx = controller.UserPlaylistList.playlists.FindIndex(
-                new System.Func<PlaylistItem, bool>(p => p.CreationDate == newItem.CreationDate)
-            );
+            int playlistIdx = -1;
+            for (int i = 0; i < controller.UserPlaylistList.playlists.Count; i++)
+            {
+                if (controller.UserPlaylistList.playlists[i].CreationDate == newItem.CreationDate)
+                {
+                    playlistIdx = i;
+                    break;
+                }
+            }
             if (playlistIdx < 0)
             {
                 Logger.Error($"Playlist '{newItem.Name}' not found in controller");
                 return;
             }
+            Logger.Msg($"Updating playlist at index {playlistIdx}, name {controller.UserPlaylistList.playlists[playlistIdx].Name}");
             controller.UserPlaylistList.playlists[playlistIdx] = newItem;
         }
 
@@ -302,18 +310,27 @@ namespace SRPlaylistManager.Models
         /// <returns></returns>
         private int GetExistingSongIndex(PlaylistSong song)
         {
-            Func<PlaylistSong, bool> findFunc = delegate (PlaylistSong x)
+            for (int i = 0; i < PlaylistItem.Songs.Count; i++)
             {
-                // Based on hash primarily
-                if (!string.IsNullOrEmpty(x.hash))
-                {
-                    return x.hash.Equals(song.hash);
-                }
+                var s = PlaylistItem.Songs[i];
 
+                // Based on hash primarily
+                if (!string.IsNullOrEmpty(s.hash))
+                {
+                    if (s.hash.Equals(song.hash))
+                    {
+                        return i;
+                    }
+                }
                 // Fall back on name and author match
-                return SongsMatchNameAuthor(x, song);
-            };
-            return PlaylistItem.Songs.FindIndex(findFunc);
+                else if (SongsMatchNameAuthor(s, song))
+                {
+                    return i;
+                }
+            }
+
+            // Not found
+            return -1;
         }
 
         private bool SongsMatchNameAuthor(PlaylistSong a, PlaylistSong b)

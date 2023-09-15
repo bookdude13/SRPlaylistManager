@@ -11,16 +11,16 @@ using Il2CppUtil.Controller;
 
 namespace SRPlaylistManager.Harmony
 {
-    /*[HarmonyPatch(typeof(SongSelectionManager), "UpdateFavoriteButtonState")]
+    [HarmonyPatch(typeof(SongSelectionManager), "UpdateFavoriteButtonState")]
     public class Patch_SongSelectionManager_UpdateFavoriteButtonState
     {
-        public static bool Prefix(TMP_Text ___favoriteBtnLabel)
+        public static bool Prefix(SongSelectionManager __instance)
         {
             // Don't follow the normal text changes
             // TODO better text and do translation
-            ___favoriteBtnLabel.SetText("Playlist", true);
+            __instance.favoriteBtnLabel.SetText("Playlist", true);
 
             return false;
         }
-    }*/
+    }
 }

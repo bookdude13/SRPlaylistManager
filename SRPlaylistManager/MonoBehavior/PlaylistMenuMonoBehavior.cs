@@ -67,6 +67,7 @@ namespace SRPlaylistManager.MonoBehavior
             }
 
             // Add items
+            _logger.Msg($"Adding items");
             playlistPanel.ClearItems();
             foreach (var playlist in playlists)
             {
@@ -75,6 +76,7 @@ namespace SRPlaylistManager.MonoBehavior
             }
 
             // Show
+            _logger.Msg($"Showing");
             playlistPanel.SetVisibility(true);
             centerView.SetVisibility(false);
         }
@@ -141,8 +143,8 @@ namespace SRPlaylistManager.MonoBehavior
             centerView.SetVisibility(true);
 
             // Resume audio
-            SongSelectionManager.GetInstance?.PlayPreviewAudio(true);
-
+            // TODO fix
+            //SongSelectionManager.GetInstance?.PlayPreviewAudio(true);
         }
 
         public static void RefreshCurrentPlaylistView()

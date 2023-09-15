@@ -18,20 +18,18 @@ namespace SRPlaylistManager.Models
         private GameObject Background { get; set; }
         private GameObject ExistingHeader { get; set; }
         private GameObject ExistingItem { get; set; }
-        private GameObject ExistingButtons { get; set; }
         private GameObject BackNav { get; set; }
         private Transform ItemContainer { get; set; }
         private Action OnClose;
         private List<GameObject> Items = new List<GameObject>();
 
-        public ScrollablePanel(SRLogger logger, GameObject panel, GameObject background, GameObject buttons, GameObject backNav, GameObject header, GameObject item, Transform itemContainer, Action onClose)
+        public ScrollablePanel(SRLogger logger, GameObject panel, GameObject background, GameObject backNav, GameObject header, GameObject item, Transform itemContainer, Action onClose)
         {
             _logger = logger;
             Panel = panel;
             Background = background;
             ExistingHeader = header;
             ExistingItem = item;
-            ExistingButtons = buttons;
             BackNav = backNav;
             ItemContainer = itemContainer;
             OnClose = onClose;
@@ -91,11 +89,13 @@ namespace SRPlaylistManager.Models
 
         public void AddHeader(string name, string text)
         {
+            _logger.Msg($"Adding header '{name}'");
             GameObject newHeader = GameObject.Instantiate(ExistingHeader, ExistingHeader.transform.position, ExistingHeader.transform.rotation, ItemContainer);
             newHeader.name = name;
             newHeader.GetComponentInChildren<Il2CppSynth.Utils.LocalizationHelper>().enabled = false;
             newHeader.GetComponentInChildren<Il2CppTMPro.TextMeshProUGUI>().SetText(text);
             newHeader.SetActive(true);
+            _logger.Msg($"Header added");
         }
 
         public void ClearItems()
@@ -133,14 +133,14 @@ namespace SRPlaylistManager.Models
             backNav.name = "playlist_backnav";
             backNav.transform.parent = panel.transform;
 
-            var background = panel.transform.Find("BG");
-            if (background == null)
+            var content = panel.transform.Find("[Content Layer]/Canvas/Scroll View");
+            if (content == null)
             {
-                logger.Error("Failed to find panel background");
+                logger.Error("Failed to find panel content");
                 return null;
             }
 
-            var buttons = panel.transform.Find("[Buttons Layer]");
+/*            var buttons = content.transform.Find("[Content Layer]/Canvas/ScrollArrows");
             if (buttons == null)
             {
                 logger.Error("Failed to find buttons");
@@ -150,7 +150,7 @@ namespace SRPlaylistManager.Models
             foreach (var button in buttons.GetComponentsInChildren<Transform>())
             {
                 button.gameObject.SetActive(false);
-            }
+            }*/
 
             logger.Debug("Finding headers and items");
             GameObject title = null;
@@ -189,7 +189,7 @@ namespace SRPlaylistManager.Models
             if (title == null) return null;
             if (item == null) return null;
 
-            return new ScrollablePanel(logger, panel, background.gameObject, buttons.gameObject, backNav, title, item, item.transform.parent, onClose);
+            return new ScrollablePanel(logger, panel, content.gameObject, backNav, title, item, item.transform.parent, onClose);
         }
 
         private static GameObject CloneInterfacePanel()
@@ -211,7 +211,7 @@ namespace SRPlaylistManager.Models
 
         private static GameObject CloneBackNavBar()
         {
-            GameObject navBar = GameObject.Find("Z-Wrap/[Pause  Menu Room]/[Wrapper]/Nav Bar");
+            GameObject navBar = GameObject.Find("Z-Wrap/[Pause Menu Room]/[Wrapper]/Nav Bar");
             if (navBar == null)
             {
                 return null;
