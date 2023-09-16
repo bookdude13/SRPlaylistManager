@@ -1,17 +1,10 @@
 ﻿using SRModCore;
 using SRPlaylistManager.Models;
 using SRPlaylistManager.Services;
-using Il2CppSynth.Item;
 using Il2CppSynth.SongSelection;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using UnityEngine;
 using Il2CppUtil.Controller;
-using Il2CppUtil.Data;
 using MelonLoader;
 
 namespace SRPlaylistManager.MonoBehavior
@@ -49,6 +42,8 @@ namespace SRPlaylistManager.MonoBehavior
             SongSelectionManager.GetInstance?.StopPreviewAudio();
 
             songPlaylistIndexBeforeOpen = currentSong.SearchIndex;
+            _logger.Msg($"Song index before open: {songPlaylistIndexBeforeOpen}");
+            _logger.Msg($"Current plist song idx {PlaylistManagementController.GetInstance.CurrentPlaylistSongIndex}");
 
             // Hide center panel
             var centerView = SongSelectionView.GetView();
@@ -92,15 +87,16 @@ namespace SRPlaylistManager.MonoBehavior
             _logger.Msg("Menu close, showing center view again");
             centerView.SetVisibility(true);
 
-            /*// Now that we're visible again, refresh the playlist view's visuals if needed
+            // Now that we're visible again, refresh the playlist view's visuals if needed
             _logger.Msg("Refreshing playlist view");
             RefreshCurrentPlaylistView();
 
             // Select at the current index, if any
             // Different checks for fixed playlists/views
             var currentPlist = PlaylistManagementController.GetInstance?.CurrentSelectedPlaylist;
-            var currentType = PlaylistManagementController.GetInstance?.CurrentSongSelectionType;
-            _logger.Msg($"Current plist {currentPlist.Name}, type {currentType}");
+            _logger.Msg($"Current plist {currentPlist.Name}");
+            _logger.Msg($"Current plist idx {PlaylistManagementController.GetInstance.CurrentPlaylistIndex}");
+            _logger.Msg($"Current plist song idx {PlaylistManagementController.GetInstance.CurrentPlaylistSongIndex}");
             if (currentPlist?.FixedPlaylist ?? true)
             {
                 // No easy way to check bounds, so just try and hope
@@ -138,7 +134,7 @@ namespace SRPlaylistManager.MonoBehavior
                     _logger.Msg("Custom playlist, clicking song at index " + songPlaylistIndexBeforeOpen);
                     SongSelectionManager.GetInstance?.OnSongItemClicked(songPlaylistIndexBeforeOpen);
                 }
-            }*/
+            }
 
             // Now that the extra click has happened, make sure the center view is still visible
             _logger.Msg("Second check for center view visible");
@@ -164,21 +160,25 @@ namespace SRPlaylistManager.MonoBehavior
                 {
                     // Favorites playlist logic
                     _logger.Msg("ShowFavorites");
+                    // 0 is all songs, 1 is favorites
                     controller.Interface__OnPlaylistScrollItemClick(1);
                 }
                 else if (controller.CurrentSelectedPlaylist.ShowAllSongs)
                 {
                     _logger.Msg("ShowAllSongs");
+                    controller.Interface__OnPlaylistScrollItemClick(0);
                 }
                 else if (controller.CurrentSelectedPlaylist.ShowAllExperiences)
                 {
                     _logger.Msg("ShowAllExperiences");
+                    controller.Interface__ShowExperiencesShelf();
                 }
                 else
                 {
                     // Not the special playlists, so just click it like normal
-                    _logger.Msg($"ItemClick playlist index {controller.CurrentPlaylistIndex}");
-                    controller.Interface__OnPlaylistScrollItemClick(controller.CurrentPlaylistIndex);
+                    var index = PlaylistPanelItem.FindMatchingPlaylistIndex(_logger, controller, controller.CurrentSelectedPlaylist);
+                    _logger.Msg($"ItemClick playlist index {index}");
+                    controller.Interface__OnPlaylistScrollItemClick(index);
                 }
             }
             else
@@ -186,7 +186,7 @@ namespace SRPlaylistManager.MonoBehavior
             }
 
             // This turns on song preview audio. Turn that off until we fully exit
-            SongSelectionManager.GetInstance.StopPreviewAudio();
+            //SongSelectionManager.GetInstance.StopPreviewAudio();
         }
     }
 }
