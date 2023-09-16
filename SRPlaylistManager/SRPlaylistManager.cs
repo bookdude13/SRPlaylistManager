@@ -66,5 +66,10 @@ namespace SRPlaylistManager
 
             menuMonoBehavior?.OpenMenu();
         }
+
+        public void Log(string message)
+        {
+            logger.Msg(message);
+        }
     }
 }

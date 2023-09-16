@@ -17,6 +17,8 @@ using UnityEngine.UI;
 using Il2CppUtil.Controller;
 using Il2CppUtil.Data;
 using System.Xml.Linq;
+using System.Collections;
+using System.Collections.Generic;
 //using Il2CppVRTK.UnityEventHelper;
 //using static ChartLoaderTest;
 
@@ -201,14 +203,14 @@ namespace SRPlaylistManager.Models
             else
             {
                 // See if the currently selected song is in us or not
-                int existingIndex = GetExistingSongIndex(SelectedSong);
-                if (existingIndex < 0)
+                int existingSongIndex = GetExistingSongIndex(SelectedSong);
+                if (existingSongIndex < 0)
                 {
                     AddToPlaylist(SelectedSong);
                 }
                 else
                 {
-                    RemoveFromPlaylist(SelectedSong);
+                    RemoveFromPlaylist(SelectedSong, existingSongIndex);
                 }
             }
 
@@ -239,7 +241,7 @@ namespace SRPlaylistManager.Models
         /// Removes the song from the given index in the current playlist.
         /// </summary>
         /// <param name="songToRemove"></param>
-        private void RemoveFromPlaylist(PlaylistSong songToRemove)
+        private void RemoveFromPlaylist(PlaylistSong songToRemove, int currentSongIdx)
         {
             var songs = GetSongsNotMatching(songToRemove);
             var numRemoved = PlaylistItem.Songs.Count - songs.Count;
@@ -249,12 +251,14 @@ namespace SRPlaylistManager.Models
             PlaylistItem.Songs = songs;
 
             // New playlist item created; to make equality check fail later??
-            UpdateController(CloneItemWithNewSongs(songs));
+            var newSongIdx = Math.Min(songs.Count - 1, currentSongIdx);
+            UpdateController(PlaylistItem, newSongIdx);
+            //UpdateController(CloneItemWithNewSongs(songs), newSongIdx);
 
             //PlaylistMenuMonoBehavior.OnMenuClosed += () => RefreshSelectedSong(existingIndex - 1);
         }
 
-        private void UpdateController(PlaylistItem newItem)
+        private void UpdateController(PlaylistItem newItem, int newSongIdx)
         {
             var controller = PlaylistManagementController.GetInstance;
             if (controller == null)
@@ -265,15 +269,7 @@ namespace SRPlaylistManager.Models
 
             // Update controller item
             // Creation date used as unique id
-            int playlistIdx = -1;
-            for (int i = 0; i < controller.UserPlaylistList.playlists.Count; i++)
-            {
-                if (controller.UserPlaylistList.playlists[i].CreationDate == newItem.CreationDate)
-                {
-                    playlistIdx = i;
-                    break;
-                }
-            }
+            int playlistIdx = FindMatchingPlaylistIndex(controller, newItem);
             if (playlistIdx < 0)
             {
                 Logger.Error($"Playlist '{newItem.Name}' not found in controller");
@@ -281,6 +277,75 @@ namespace SRPlaylistManager.Models
             }
             Logger.Msg($"Updating playlist at index {playlistIdx}, name {controller.UserPlaylistList.playlists[playlistIdx].Name}");
             controller.UserPlaylistList.playlists[playlistIdx] = newItem;
+
+            var oldPlaylistIdx = controller.CurrentPlaylistIndex;
+            var oldCasspi = controller.CurrentAddingSongsSelectedPlaylistIndex;
+            var oldSongIdx = controller.CurrentPlaylistSongIndex;
+            var oldPlaylist = controller.CurrentSelectedPlaylist;
+            var oldSongIdx2 = oldPlaylist.CurrentIndex;
+            Logger.Msg($"Old indices. P: {oldPlaylistIdx}, S: {oldSongIdx} S2: {oldSongIdx2}");
+            Logger.Msg($"New indices. P: {playlistIdx}, S: {newSongIdx}");
+            Logger.Msg($"Old P: {oldPlaylist.Name}, {oldPlaylist.FixedPlaylist}");
+            Logger.Msg($"CSST {controller.CurrentSongSelectionType}");
+
+            /*// Pretend we're in the middle of adding a song from the playlist view.
+            // The one we want is already properly selected.
+            controller.CurrentAddingSongsSelectedPlaylistIndex = playlistIdx;
+            controller.Interface__TryAddSongsToSelectredPlaylist();
+
+            // The only downside is that it automatically selects the new playlist afterwards instead of the original one
+            // So we need to select the old playlist again
+            *//*controller.CurrentPlaylistIndex = oldPlaylistIdx;
+            controller.CurrentSelectedPlaylist = oldPlaylist;*//*
+            controller.OnPlaylistItemClicked(oldPlaylist);*/
+
+            // Adding the song updates the song preview music. Turn that off until we actually leave
+            SongSelectionManager.GetInstance.StopPreviewAudio();
+
+            /*controller.SetSelectedPlaylist(newItem, playlistIdx);
+            controller.Interface__TryAddSongsToSelectredPlaylist();
+            if (oldPlaylistIdx != playlistIdx)
+            {
+                Logger.Msg($"Setting back to old playlist");
+                controller.SetSelectedPlaylist(oldPlaylist, oldPlaylistIdx);
+            }*/
+        }
+
+        private int FindMatchingPlaylistIndex(PlaylistManagementController controller, PlaylistItem searched)
+        {
+            var matchingIndices = new List<int>();
+            for (int i = 0; i < controller.UserPlaylistList.playlists.Count; i++)
+            {
+                if (controller.UserPlaylistList.playlists[i].CreationDate == searched.CreationDate)
+                {
+                    matchingIndices.Add(i);
+                }
+            }
+
+            if (!matchingIndices.Any())
+            {
+                Logger.Msg("No playlist found");
+                return -1;
+            }
+
+            if (matchingIndices.Count == 1)
+            {
+                return matchingIndices[0];
+            }
+
+            // More than one match. Try to go by name then
+            foreach (int i in matchingIndices)
+            {
+                if (controller.UserPlaylistList.playlists[i].Name == searched.Name)
+                {
+                    Logger.Msg($"Name match on '{searched.Name}', using index {i}");
+                    return i;
+                }
+            }
+
+            // No name match; just go with the first one I guess
+            Logger.Msg("No matching playlist name, going with first option");
+            return matchingIndices[0];
         }
 
         private PlaylistItem CloneItemWithNewSongs(Il2CppSystem.Collections.Generic.List<PlaylistSong> songs)
@@ -365,7 +430,9 @@ namespace SRPlaylistManager.Models
             PlaylistItem.Songs = songs;
 
             // New playlist item created; to make equality check fail later??
-            UpdateController(CloneItemWithNewSongs(songs));
+            var newSongIdx = songs.Count - 1;
+            //UpdateController(CloneItemWithNewSongs(songs), newSongIdx);
+            UpdateController(PlaylistItem, newSongIdx);
         }
     }
 }

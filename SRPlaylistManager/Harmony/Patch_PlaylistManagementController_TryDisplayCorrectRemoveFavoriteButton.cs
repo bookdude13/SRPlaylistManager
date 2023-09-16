@@ -16,6 +16,8 @@ namespace SRPlaylistManager.Harmony
     {
         public static void Postfix(PlaylistManagementController __instance)
         {
+            SRPlaylistManager.Instance?.Log("HARMONY TryDisplayCorrectRemoveFavoriteButton");
+
             // Override the remove button text
             __instance.pf_RemoveFromPlaylistButton?.GetComponentInChildren<TMP_Text>(true)?.SetText("Playlist", true);
 

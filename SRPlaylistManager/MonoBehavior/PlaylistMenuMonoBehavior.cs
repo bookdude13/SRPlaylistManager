@@ -92,13 +92,15 @@ namespace SRPlaylistManager.MonoBehavior
             _logger.Msg("Menu close, showing center view again");
             centerView.SetVisibility(true);
 
-            // Now that we're visible again, refresh the playlist view's visuals if needed
+            /*// Now that we're visible again, refresh the playlist view's visuals if needed
             _logger.Msg("Refreshing playlist view");
             RefreshCurrentPlaylistView();
 
             // Select at the current index, if any
             // Different checks for fixed playlists/views
             var currentPlist = PlaylistManagementController.GetInstance?.CurrentSelectedPlaylist;
+            var currentType = PlaylistManagementController.GetInstance?.CurrentSongSelectionType;
+            _logger.Msg($"Current plist {currentPlist.Name}, type {currentType}");
             if (currentPlist?.FixedPlaylist ?? true)
             {
                 // No easy way to check bounds, so just try and hope
@@ -136,7 +138,7 @@ namespace SRPlaylistManager.MonoBehavior
                     _logger.Msg("Custom playlist, clicking song at index " + songPlaylistIndexBeforeOpen);
                     SongSelectionManager.GetInstance?.OnSongItemClicked(songPlaylistIndexBeforeOpen);
                 }
-            }
+            }*/
 
             // Now that the extra click has happened, make sure the center view is still visible
             _logger.Msg("Second check for center view visible");
@@ -144,27 +146,43 @@ namespace SRPlaylistManager.MonoBehavior
 
             // Resume audio
             // TODO fix
-            //SongSelectionManager.GetInstance?.PlayPreviewAudio(true);
+            _logger.Msg($"Selected song: {SongSelectionManager.GetInstance?.SelectedGameTrack?.name}");
+            SongSelectionManager.GetInstance?.PlayPreviewAudio(true);
         }
 
         public static void RefreshCurrentPlaylistView()
         {
             var controller = PlaylistManagementController.GetInstance;
 
+            _logger.Msg("Current playlist idx: " + controller.CurrentPlaylistIndex);
+            _logger.Msg("Current selected playlist: " + controller.CurrentSelectedPlaylist?.Name);
+            _logger.Msg("Current selection type: " + controller.CurrentSongSelectionType);
             // Refresh currently selected playlist view
             if (controller.CurrentPlaylistIndex >= 0)
             {
                 if (controller.CurrentSelectedPlaylist.ShowFavorites)
                 {
                     // Favorites playlist logic
+                    _logger.Msg("ShowFavorites");
                     controller.Interface__OnPlaylistScrollItemClick(1);
+                }
+                else if (controller.CurrentSelectedPlaylist.ShowAllSongs)
+                {
+                    _logger.Msg("ShowAllSongs");
+                }
+                else if (controller.CurrentSelectedPlaylist.ShowAllExperiences)
+                {
+                    _logger.Msg("ShowAllExperiences");
                 }
                 else
                 {
-                    // Not the special Favorites playlist, so just click it like normal
+                    // Not the special playlists, so just click it like normal
                     _logger.Msg($"ItemClick playlist index {controller.CurrentPlaylistIndex}");
                     controller.Interface__OnPlaylistScrollItemClick(controller.CurrentPlaylistIndex);
                 }
+            }
+            else
+            {
             }
 
             // This turns on song preview audio. Turn that off until we fully exit
