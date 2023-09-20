@@ -7,10 +7,11 @@ using System.Threading.Tasks;
 using Il2Cpp;
 using UnityEngine;
 using UnityEngine.Events;
+using MelonLoader;
 
 namespace SRPlaylistManager.Models
 {
-    internal class ScrollablePanel
+    public class ScrollablePanel
     {
         public GameObject Panel { get; private set; }
 
@@ -54,19 +55,6 @@ namespace SRPlaylistManager.Models
                 var button = backBtn.GetComponentInChildren<Il2Cpp.SynthUIButton>();
                 button.WhenClicked = new UnityEvent();
                 button.WhenClicked.AddListener(new Action(() => Close()));
-
-                /*var button = backBtn.GetComponentInChildren<UnityEngine.UI.Button>(true);
-                button.onClick.RemoveAllListeners();
-
-                var num = button.onClick.GetPersistentEventCount();
-                for (var i = 0; i < num; i++)
-                {
-                    var nm = button.onClick.GetPersistentMethodName(i);
-                    _logger.Debug($"Persistent {nm} removed");
-                    button.onClick.SetPersistentListenerState(i, UnityEventCallState.Off);
-                }
-
-                button.onClick.AddListener(Close);*/
             }
             catch (Exception e)
             {
@@ -139,18 +127,6 @@ namespace SRPlaylistManager.Models
                 logger.Error("Failed to find panel content");
                 return null;
             }
-
-/*            var buttons = content.transform.Find("[Content Layer]/Canvas/ScrollArrows");
-            if (buttons == null)
-            {
-                logger.Error("Failed to find buttons");
-                return null;
-            }
-            // Hide buttons, but keep them around for cloning
-            foreach (var button in buttons.GetComponentsInChildren<Transform>())
-            {
-                button.gameObject.SetActive(false);
-            }*/
 
             logger.Debug("Finding headers and items");
             GameObject title = null;

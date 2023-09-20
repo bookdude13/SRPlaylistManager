@@ -12,7 +12,8 @@ namespace SRPlaylistManager
 
         private SRLogger logger;
         private PlaylistService playlistService;
-        private PlaylistMenuMonoBehavior menuMonoBehavior = null;
+        private MainMenuPlaylistMenuMonoBehavior mainMenuMonoBehavior = null;
+        private MultiplayerPlaylistMenuMonoBehavior multiplayerMonoBehavior = null;
 
         public override void OnInitializeMelon()
         {
@@ -21,6 +22,42 @@ namespace SRPlaylistManager
             logger = new MelonLoggerWrapper(LoggerInstance);
             playlistService = new PlaylistService(logger);
             Instance = this;
+        }
+        
+        private void EnsureMainMenuSetup(GameObject zWrap)
+        {
+            var gameObjectName = "srplaylistmanager_mainmenu";
+            var mainMenuPlaylistGO = zWrap.transform.Find(gameObjectName)?.gameObject;
+            if (mainMenuPlaylistGO == null)
+            {
+                logger.Msg("Playlist GO not found in main menu; creating...");
+                mainMenuPlaylistGO = new GameObject(gameObjectName);
+                mainMenuPlaylistGO.transform.SetParent(zWrap.transform, false);
+                mainMenuMonoBehavior = mainMenuPlaylistGO.AddComponent<MainMenuPlaylistMenuMonoBehavior>();
+                mainMenuMonoBehavior.Init(logger, playlistService);
+            }
+            else
+            {
+                logger.Msg("Playlist main menu GO found");
+            }
+        }
+
+        private void EnsureMultiplayerSetup(GameObject zWrap)
+        {
+            var gameObjectName = "srplaylistmanager_multiplayer";
+            var multiplayerPlaylistGO = zWrap.transform.Find(gameObjectName)?.gameObject;
+            if (multiplayerPlaylistGO == null)
+            {
+                logger.Msg("Playlist GO not found for multiplayer; creating...");
+                multiplayerPlaylistGO = new GameObject(gameObjectName);
+                multiplayerPlaylistGO.transform.SetParent(zWrap.transform, false);
+                multiplayerMonoBehavior = multiplayerPlaylistGO.AddComponent<MultiplayerPlaylistMenuMonoBehavior>();
+                multiplayerMonoBehavior.Init(logger, playlistService);
+            }
+            else
+            {
+                logger.Msg("Playlist multiplayer GO found");
+            }
         }
 
         public override void OnSceneWasInitialized(int buildIndex, string sceneName)
@@ -32,20 +69,9 @@ namespace SRPlaylistManager
             if (scene.SceneType == SRScene.SRSceneType.MAIN_MENU)
             {
                 var zWrap = GameObject.Find("Main Stage Prefab/Z-Wrap");
-                var gameObjectName = "srplaylistmanager_menu";
-                var playlistGO = zWrap.transform.Find(gameObjectName)?.gameObject;
-                if (playlistGO == null)
-                {
-                    logger.Msg("Playlist GO not found; creating...");
-                    playlistGO = new GameObject("srplaylistmanager_menu");
-                    playlistGO.transform.SetParent(zWrap.transform, false);
-                    menuMonoBehavior = playlistGO.AddComponent<PlaylistMenuMonoBehavior>();
-                    menuMonoBehavior.Init(logger, playlistService);
-                }
-                else
-                {
-                    logger.Msg("Playlist GO found");
-                }
+                EnsureMainMenuSetup(zWrap);
+                EnsureMultiplayerSetup(zWrap);
+                DisableAddSongsButtonFromPlaylistView(zWrap);
             }
             /*else
             {
@@ -54,22 +80,54 @@ namespace SRPlaylistManager
             }*/
         }
 
-        public void OnTogglePlaylistButton()
+        public void OnToggleMainMenuPlaylistButton()
         {
-            logger.Msg("Toggled playlist button");
+            logger.Msg("Toggled playlist button for main menu");
 
-            if (menuMonoBehavior == null)
+            if (mainMenuMonoBehavior == null)
             {
                 logger.Error("Toggled playlist with no monobehavior defined!");
                 return;
             }
 
-            menuMonoBehavior?.OpenMenu();
+            mainMenuMonoBehavior?.OpenMenu();
+        }
+
+        public void OnToggleMultiplayerPlaylistButton()
+        {
+            logger.Msg("Toggled playlist button for multiplayer");
+
+            if (multiplayerMonoBehavior == null)
+            {
+                logger.Error("Toggled playlist with no monobehavior defined!");
+                return;
+            }
+
+            multiplayerMonoBehavior?.OpenMenu();
         }
 
         public void Log(string message)
         {
             logger.Msg(message);
+        }
+
+        private void DisableAddSongsButtonFromPlaylistView(GameObject zWrap)
+        {
+            var playlistManagemet = zWrap.transform.Find("SongSelection/SelectionSongPanel/PlayListManagement");
+            var plistButtons = playlistManagemet.Find("VisibleWrap/Middle/Playlist Edition Control/Action Buttons");
+            var btnAddSongs = plistButtons.Find("AddSongs");
+            var btnChangeCover = plistButtons.Find("ChangeCover");
+            var btnDelete = plistButtons.Find("Delete Playlist");
+
+            // Disable the "Add Songs" button when a playlist is selected,
+            // since it makes the logic more complex and just opens the main view
+            // which can add songs to any playlist anyways.
+            btnAddSongs.gameObject.SetActive(false);
+
+            // Offset the other buttons for a more natural look.
+            // Originally AddSongs -3.95, ChangeCover 0, Delete Playlist 3.95
+            btnChangeCover.localPosition = new Vector3(-3.2f, 0, 0);
+            btnDelete.localPosition = new Vector3(3.2f, 0, 0);
         }
     }
 }

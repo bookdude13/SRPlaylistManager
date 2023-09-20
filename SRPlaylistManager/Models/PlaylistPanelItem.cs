@@ -13,10 +13,9 @@ using System.Collections.Generic;
 
 namespace SRPlaylistManager.Models
 {
-    internal class PlaylistPanelItem : PanelItem
+    public class PlaylistPanelItem : PanelItem
     {
         private PlaylistItem PlaylistItem;
-        //private VRTK_InteractableObject_UnityEvents ItemEvents;
         private Il2Cpp.SynthUIButton ItemButton;
         private VRTKButtonHelper ItemButtonHelper;
         private Il2CppTMPro.TextMeshProUGUI Text;
@@ -83,15 +82,6 @@ namespace SRPlaylistManager.Models
                 // Wiping out the WhenClicked callback gets rid of old behavior
                 // and lets us add our own callbacks without any hassle
                 ItemButton.WhenClicked = new UnityEvent();
-                /*ItemEvents.OnUse.RemoveAllListeners();
-                var num = ItemEvents.OnUse.GetPersistentEventCount();
-                for (var i = 0; i < num; i++)
-                {
-                    var nm = ItemEvents.OnUse.GetPersistentMethodName(i);
-                    ItemEvents.OnUse.SetPersistentListenerState(i, UnityEventCallState.Off);
-                }
-
-                ItemEvents.OnUse.AddListener(Toggle);*/
                 ItemButton.WhenClicked.AddListener(new Action(() => Toggle()));
                 ItemButtonHelper.SetActive();
             }

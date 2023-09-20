@@ -1,13 +1,5 @@
 ﻿using HarmonyLib;
 using Il2CppSynth.SongSelection;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Il2CppTMPro;
-using UnityEngine;
-using Il2CppUtil.Controller;
 
 namespace SRPlaylistManager.Harmony
 {

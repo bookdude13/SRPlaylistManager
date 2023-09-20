@@ -9,7 +9,7 @@ using Il2CppUtil.Data;
 
 namespace SRPlaylistManager.Services
 {
-    class PlaylistService
+    public class PlaylistService
     {
         private SRLogger logger;
 

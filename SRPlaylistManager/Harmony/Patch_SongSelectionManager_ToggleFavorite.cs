@@ -1,11 +1,5 @@
 ﻿using HarmonyLib;
 using Il2CppSynth.SongSelection;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Il2CppUtil.Controller;
 
 namespace SRPlaylistManager.Harmony
 {
@@ -14,7 +8,7 @@ namespace SRPlaylistManager.Harmony
     {
         public static bool Prefix()
         {
-            SRPlaylistManager.Instance?.OnTogglePlaylistButton();
+            SRPlaylistManager.Instance?.OnToggleMainMenuPlaylistButton();
 
             // Don't follow the normal "Add/Remove Favorites" logic
             return false;

@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace SRPlaylistManager.Models
 {
-    internal class SongSelectionView
+    public class SongSelectionView
     {
         public GameObject SelectionSongPanel { get; private set; }
         private GameObject CenterPanel;

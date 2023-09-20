@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace SRPlaylistManager.Models
 {
-    internal interface PanelItem
+    public interface PanelItem
     {
         GameObject Setup(GameObject item);
     }

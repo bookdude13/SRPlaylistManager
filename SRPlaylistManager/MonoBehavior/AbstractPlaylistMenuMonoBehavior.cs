@@ -10,19 +10,42 @@ using MelonLoader;
 namespace SRPlaylistManager.MonoBehavior
 {
     [RegisterTypeInIl2Cpp]
-    class PlaylistMenuMonoBehavior : MonoBehaviour
+    public abstract class AbstractPlaylistMenuMonoBehavior : MonoBehaviour
     {
-        private static SRLogger _logger;
+        public AbstractPlaylistMenuMonoBehavior(IntPtr ptr) : base(ptr) { }
+
+        protected SRLogger _logger;
         private PlaylistService playlistService;
         private ScrollablePanel playlistPanel;
-        private int songPlaylistIndexBeforeOpen = -1;
-
-        public PlaylistMenuMonoBehavior () { }
+        protected int songPlaylistIndexBeforeOpen = -1;
 
         public void Init(SRLogger logger, PlaylistService playlistService)
         {
             _logger = logger;
             this.playlistService = playlistService;
+        }
+
+        protected virtual GameObject GetToggledView()
+        {
+            return null;
+        }
+        protected virtual void OnMenuClose(GameObject toHide)
+        {
+            toHide.SetActive(true);
+        }
+
+        private ScrollablePanel CreatePlaylistPanel(GameObject toHide)
+        {
+            // Add our playlist menu
+            var panel = ScrollablePanel.Create("playlist_panel", () => OnMenuClose(toHide), _logger);
+
+            // Use hidden view's parent as our own, since we basically replace it
+            panel.Panel.transform.parent = toHide.transform.parent;
+
+            // Add header
+            panel.AddHeader("playlists_header", "Playlists");
+
+            return panel;
         }
 
         public void OpenMenu()
@@ -36,7 +59,7 @@ namespace SRPlaylistManager.MonoBehavior
                 _logger.Error("Current selected song null; not opening menu");
                 return;
             }
-            _logger.Msg($"Current song: '{currentSong.name}'");
+            _logger.Msg($"Current song: '{currentSong.SongDataName}'");
 
             // Stop any songs that are playing
             SongSelectionManager.GetInstance?.StopPreviewAudio();
@@ -45,20 +68,18 @@ namespace SRPlaylistManager.MonoBehavior
             _logger.Msg($"Song index before open: {songPlaylistIndexBeforeOpen}");
             _logger.Msg($"Current plist song idx {PlaylistManagementController.GetInstance.CurrentPlaylistSongIndex}");
 
-            // Hide center panel
-            var centerView = SongSelectionView.GetView();
+            // Get parent for panel
+            var viewToHide = GetToggledView();// SongSelectionView.GetView();
+            if (viewToHide == null)
+            {
+                _logger.Error("Failed to find view that will be toggled/hidden");
+                return;
+            }
 
             // Create panel if needed
             if (playlistPanel == null)
             {
-                // Add our playlist menu
-                var panel = ScrollablePanel.Create("playlist_panel", () => OnMenuClose(centerView), _logger);
-                panel.Panel.transform.parent = centerView.SelectionSongPanel.transform;
-
-                // Add header
-                panel.AddHeader("playlists_header", "Playlists");
-
-                playlistPanel = panel;
+                playlistPanel = CreatePlaylistPanel(viewToHide);
             }
 
             // Add items
@@ -70,10 +91,10 @@ namespace SRPlaylistManager.MonoBehavior
                 playlistPanel.AddItem(panelItem);
             }
 
-            // Show
+            // Show menu, hide center view
             _logger.Msg($"Showing");
             playlistPanel.SetVisibility(true);
-            centerView.SetVisibility(false);
+            viewToHide.gameObject.SetActive(false);
         }
 
         private Il2CppSynth.Retro.Game_Track_Retro GetSelectedTrack()
@@ -81,72 +102,7 @@ namespace SRPlaylistManager.MonoBehavior
             return Il2CppSynth.SongSelection.SongSelectionManager.GetInstance?.SelectedGameTrack;
         }
 
-        private void OnMenuClose(SongSelectionView centerView)
-        {
-            // Try to open center view again
-            _logger.Msg("Menu close, showing center view again");
-            centerView.SetVisibility(true);
-
-            // Now that we're visible again, refresh the playlist view's visuals if needed
-            _logger.Msg("Refreshing playlist view");
-            RefreshCurrentPlaylistView();
-
-            // Select at the current index, if any
-            // Different checks for fixed playlists/views
-            var currentPlist = PlaylistManagementController.GetInstance?.CurrentSelectedPlaylist;
-            _logger.Msg($"Current plist {currentPlist.Name}");
-            _logger.Msg($"Current plist idx {PlaylistManagementController.GetInstance.CurrentPlaylistIndex}");
-            _logger.Msg($"Current plist song idx {PlaylistManagementController.GetInstance.CurrentPlaylistSongIndex}");
-            if (currentPlist?.FixedPlaylist ?? true)
-            {
-                // No easy way to check bounds, so just try and hope
-                _logger.Msg("Fixed playlist, selecting song idx " + songPlaylistIndexBeforeOpen);
-                if (songPlaylistIndexBeforeOpen >= 0)
-                {
-                    try
-                    {
-                        SongSelectionManager.GetInstance?.OnSongItemClicked(songPlaylistIndexBeforeOpen);
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.Error("Failed to select song after menu close", ex);
-                    }
-                }
-            }
-            else
-            {
-                // User playlist
-
-                // Select current song item
-                var currPlaylistSongCount = currentPlist?.Songs.Count ?? 0;
-                if (songPlaylistIndexBeforeOpen > currPlaylistSongCount - 1)
-                {
-                    songPlaylistIndexBeforeOpen = currPlaylistSongCount - 1;
-                    _logger.Msg("Index too big, changed to " + songPlaylistIndexBeforeOpen);
-                }
-
-                if (songPlaylistIndexBeforeOpen < 0)
-                {
-                    _logger.Msg("Index out of range, not clicking song");
-                }
-                else
-                {
-                    _logger.Msg("Custom playlist, clicking song at index " + songPlaylistIndexBeforeOpen);
-                    SongSelectionManager.GetInstance?.OnSongItemClicked(songPlaylistIndexBeforeOpen);
-                }
-            }
-
-            // Now that the extra click has happened, make sure the center view is still visible
-            _logger.Msg("Second check for center view visible");
-            centerView.SetVisibility(true);
-
-            // Resume audio
-            // TODO fix
-            _logger.Msg($"Selected song: {SongSelectionManager.GetInstance?.SelectedGameTrack?.name}");
-            SongSelectionManager.GetInstance?.PlayPreviewAudio(true);
-        }
-
-        public static void RefreshCurrentPlaylistView()
+        public void RefreshCurrentPlaylistView()
         {
             var controller = PlaylistManagementController.GetInstance;
 
