@@ -80,6 +80,8 @@ namespace SRPlaylistManager.MonoBehavior
             toHide.SetActive(true);
 
             // Resume audio
+            // Sometimes throws error when song in current playlist is removed in other playlists.
+            // Not sure why, so leaving it as-is for now
             _logger.Msg($"Selected song: {SongSelectionManager.GetInstance?.SelectedGameTrack?.name}");
             try
             {
