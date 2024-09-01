@@ -3,6 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 17.3.32819.101
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SRPlaylistManager", "SRPlaylistManager.csproj", "{2A3FFEC0-C394-42DF-9371-ECE6A0A2D05E}"
+	ProjectSection(ProjectDependencies) = postProject
+		{9B7135F7-47F1-421E-9553-722C304B7767} = {9B7135F7-47F1-421E-9553-722C304B7767}
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SRModCore", "C:\Users\rfred\git\SRVoting\SRModCore\SRModCore\SRModCore.csproj", "{9B7135F7-47F1-421E-9553-722C304B7767}"
 EndProject

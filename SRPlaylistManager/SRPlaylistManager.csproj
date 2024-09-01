@@ -9,14 +9,11 @@
     <AssemblyVersion>2.0.0.0</AssemblyVersion>
     <FileVersion>2.0.0.0</FileVersion>
     <Version>2.0.0.0</Version>
-    <SynthRidersDir>C:\Program Files (x86)\Steam\steamapps\common\SynthRiders</SynthRidersDir>
+    <SynthRidersDir>E:\SteamLibrary\steamapps\common\SynthRiders</SynthRidersDir>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
     <PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="C:\Users\rfred\git\SRVoting\SRModCore\SRModCore\SRModCore.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="0Harmony">
@@ -47,9 +44,8 @@
       <HintPath>$(SynthRidersDir)\MelonLoader\net6\MelonLoader.dll</HintPath>
     </Reference>
     <Reference Include="SRModCore">
-      <HintPath>libs\SRModCore.dll</HintPath>
-    </Reference>
-    <Reference Include="Unity.TextMeshPro">
+      <HintPath>..\SRModCore\SRModCore\bin\Debug\net6.0\publish\SRModCore.dll</HintPath>
+    </Reference>    <Reference Include="Unity.TextMeshPro">
       <HintPath>$(SynthRidersDir)\MelonLoader\Il2CppAssemblies\Unity.TextMeshPro.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine">
