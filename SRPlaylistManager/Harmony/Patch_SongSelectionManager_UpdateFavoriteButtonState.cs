@@ -1,5 +1,6 @@
 ﻿using HarmonyLib;
 using Il2CppSynth.SongSelection;
+using SRModCore;
 
 namespace SRPlaylistManager.Harmony
 {
@@ -10,9 +11,14 @@ namespace SRPlaylistManager.Harmony
         {
             // Don't follow the normal text changes
             // TODO better text and do translation
-            __instance.favoriteBtnLabel.SetText("Playlist", true);
+            __instance.favoriteBtn.toolTipLabelNormal = "Select Playlists";
+            __instance.favoriteBtn.toolTipLabelSelected = "Select Playlists";
 
-            return false;
+            __instance.favoriteBtn.synthUIButton.SetText("Select Playlists");
+
+            // TODO set state based on if the current song is in _any_ playlist, not just favorites?
+
+            return true;
         }
     }
 }

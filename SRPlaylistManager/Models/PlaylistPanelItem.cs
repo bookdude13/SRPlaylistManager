@@ -10,6 +10,7 @@ using UnityEngine.Events;
 using Il2CppUtil.Controller;
 using Il2CppUtil.Data;
 using System.Collections.Generic;
+using Il2CppSynth.Data;
 
 namespace SRPlaylistManager.Models
 {
@@ -17,7 +18,6 @@ namespace SRPlaylistManager.Models
     {
         private PlaylistItem PlaylistItem;
         private Il2Cpp.SynthUIButton ItemButton;
-        private VRTKButtonHelper ItemButtonHelper;
         private Il2CppTMPro.TextMeshProUGUI Text;
         private SRLogger Logger;
 
@@ -32,7 +32,15 @@ namespace SRPlaylistManager.Models
 
             SelectedSong = CreatePlaylistSongFromTrack(selectedTrack);
         }
-        
+
+        private void LogVerbose(string message)
+        {
+            if (SRPlaylistManager.VERBOSE_LOGS)
+            {
+                Logger.Msg(message);
+            }
+        }
+
         private PlaylistSong CreatePlaylistSongFromTrack(Game_Track_Retro track)
         {
             // PlaylistManagementController
@@ -57,24 +65,38 @@ namespace SRPlaylistManager.Models
             // Logger.Msg("Setting up playlist item " + PlaylistItem.Name);
             item.name = "playlist_item_" + PlaylistItem.Name;
 
+            LogVerbose("Setting up item " + item.name);
+
             // Stop text from being changed from localization running
-            item.GetComponentInChildren<Il2CppSynth.Utils.LocalizationHelper>().enabled = false;
+            var l8ns = item.GetComponentsInChildren<Il2CppSynth.Utils.LocalizationHelper>();
+            if (l8ns != null)
+            {
+                foreach (var l8n in l8ns)
+                {
+                    l8n.enabled = false;
+                }
+            }
 
             // Remove unused area if found
-            item.transform.Find("Background/Value Area").gameObject.SetActive(false);
+            var valueArea = item.transform.Find("Value Area");
+            valueArea?.gameObject.SetActive(false);
+
+            // Find main label area
+            var itemBackgroundArea = item.transform.Find("Setting Item Background");
 
             // Update text
-            Text = item.GetComponentInChildren<Il2CppTMPro.TextMeshProUGUI>();
-            Text.SetText(PlaylistItem.Name);
+            Text = itemBackgroundArea?.GetComponentInChildren<Il2CppTMPro.TextMeshProUGUI>();
+            Text?.SetText(PlaylistItem.Name);
 
             // Set up as button toggle
             try
             {
-                //ItemEvents = item.GetComponent<VRTK_InteractableObject_UnityEvents>();
                 ItemButton = item.GetComponent<SynthUIButton>();
-                ItemButtonHelper = item.AddComponent<VRTKButtonHelper>();
 
                 ItemButton.enabled = true;
+                ItemButton.showTooltip = false;
+
+                // TODO there's a background color change that happens on hover. Can't figure out why atm.
 
                 // Directly removing persistent listeners doesn't work
                 // See https://forum.unity.com/threads/documentation-unityevent-removealllisteners-only-removes-non-persistent-listeners.341796/
@@ -83,7 +105,8 @@ namespace SRPlaylistManager.Models
                 // and lets us add our own callbacks without any hassle
                 ItemButton.WhenClicked = new UnityEvent();
                 ItemButton.WhenClicked.AddListener(new Action(() => Toggle()));
-                ItemButtonHelper.SetActive();
+
+                ItemButton.gameObject.SetActive(true);
             }
             catch (Exception ex)
             {
@@ -100,13 +123,24 @@ namespace SRPlaylistManager.Models
 
         private void UpdateAppearance()
         {
+            if (PlaylistItem == null)
+            {
+                Logger.Error("Null playlist item!");
+                return;
+            }
+
             if (PlaylistItem.FixedPlaylist && PlaylistItem.ShowFavorites)
             {
-                if (SelectedTrack.OnFavorites)
+                if (SelectedTrack == null)
                 {
-                    // Difficulty is hard to get for favorites.
-                    // Just add stars for now
-                    SetAppearanceInPlaylist($"\u2606 | {PlaylistItem.Name}");
+                    Logger.Error("Selected track is null!");
+                }
+
+                if (SelectedTrack != null && SelectedTrack.OnFavorites)
+                {
+                    // It's difficult to get the current difficulty that was added to Favorites, so just don't include that info for now.
+                    // A unicode star used to be shown, but that no longer renders.
+                    SetAppearanceInPlaylist($"{PlaylistItem.Name}");
                 }
                 else
                 {
@@ -131,6 +165,12 @@ namespace SRPlaylistManager.Models
 
         private void SetAppearanceInPlaylist(string text)
         {
+            if (Text == null)
+            {
+                Logger.Error("Text is null! Can't set in playlist, " + text);
+                return;
+            }
+
             Text.fontStyle = Il2CppTMPro.FontStyles.Bold;
             Text.color = Color.white;
             Text.SetText(text);
@@ -138,6 +178,12 @@ namespace SRPlaylistManager.Models
 
         private void SetAppearanceNotInPlaylist()
         {
+            if (Text == null)
+            {
+                Logger.Error("Text is null! Can't set not in playlist, " + PlaylistItem.Name);
+                return;
+            }
+
             Text.fontStyle = Il2CppTMPro.FontStyles.Normal;
             Text.color = Color.gray;
 
@@ -177,6 +223,7 @@ namespace SRPlaylistManager.Models
             // Favorites are handled separately
             if (PlaylistItem.FixedPlaylist && PlaylistItem.ShowFavorites)
             {
+                LogVerbose("Toggling playlist as favorite");
                 ToggleFavorite();
             }
             else
@@ -185,10 +232,14 @@ namespace SRPlaylistManager.Models
                 int existingSongIndex = GetExistingSongIndex(SelectedSong);
                 if (existingSongIndex < 0)
                 {
+                    LogVerbose("Adding to playlist, existing song index " + existingSongIndex);
                     AddToPlaylist(SelectedSong);
+
+                    SongSelectionManager.GetInstance.SelectedGameTrack = SelectedTrack;
                 }
                 else
                 {
+                    LogVerbose("Removing from playlist, existing song index " + existingSongIndex);
                     RemoveFromPlaylist(SelectedSong, existingSongIndex);
                 }
             }
@@ -201,13 +252,13 @@ namespace SRPlaylistManager.Models
             // Toggle
             if (SelectedTrack.OnFavorites)
             {
-                Logger.Msg($"Removing '{SelectedTrack.TrackName}' from Favorites");
+                LogVerbose($"Removing '{SelectedTrack.TrackName}' from Favorites");
                 Game_InfoProvider.RemoveFromFavoritesList(SelectedTrack.TrackName, SelectedTrack.Author, SelectedTrack.LeaderboardHash);
                 SelectedTrack.OnFavorites = false;
             }
             else
             {
-                Logger.Msg($"Adding '{SelectedTrack.TrackName}' to Favorites");
+                LogVerbose($"Adding '{SelectedTrack.TrackName}' to Favorites");
                 Game_InfoProvider.AddToFavoritesList(SelectedTrack.TrackName, SelectedTrack.Author, SelectedTrack.LeaderboardHash);
                 SelectedTrack.OnFavorites = true;
             }
@@ -216,22 +267,32 @@ namespace SRPlaylistManager.Models
             SongSelectionManager.GetInstance.SelectedGameTrack = SelectedTrack;
         }
 
+        private void SetPlaylistItemSongs(PlaylistItem playlistItem, Il2CppSystem.Collections.Generic.List<PlaylistSong> songs)
+        {
+            playlistItem.Songs.Clear();
+            foreach (var song in songs)
+            {
+                playlistItem.Songs.Add(song);
+            }
+        }
+
         /// <summary>
         /// Removes the song from the given index in the current playlist.
         /// </summary>
         /// <param name="songToRemove"></param>
         private void RemoveFromPlaylist(PlaylistSong songToRemove, int currentSongIdx)
         {
-            var songs = GetSongsNotMatching(songToRemove);
+            var songs = GetSongsNotMatching(GetSongsThatExist(), songToRemove);
             var numRemoved = PlaylistItem.Songs.Count - songs.Count;
-            Logger.Msg($"Removing {numRemoved} instances of '{songToRemove.name}' from playlist '{PlaylistItem.Name}'");
+            LogVerbose($"Removing {numRemoved} instances of '{songToRemove.name}' from playlist '{PlaylistItem.Name}'");
 
             // Update our reference to the song list
-            PlaylistItem.Songs = songs;
+            SetPlaylistItemSongs(PlaylistItem, songs);
 
-            // New playlist item created; to make equality check fail later??
             var newSongIdx = Math.Min(songs.Count - 1, currentSongIdx);
             UpdateController(PlaylistItem, newSongIdx);
+
+            LogVerbose($"After removal, new song index is {newSongIdx} (count {songs.Count}, current idx {currentSongIdx}");
 
             //PlaylistMenuMonoBehavior.OnMenuClosed += () => RefreshSelectedSong(existingIndex - 1);
         }
@@ -257,17 +318,42 @@ namespace SRPlaylistManager.Models
             controller.UserPlaylistList.playlists[playlistIdx] = newItem;
 
             var oldPlaylistIdx = controller.CurrentPlaylistIndex;
-            var oldCasspi = controller.CurrentAddingSongsSelectedPlaylistIndex;
+            //var oldCasspi = controller.CurrentAddingSongsSelectedPlaylistIndex;
             var oldSongIdx = controller.CurrentPlaylistSongIndex;
             var oldPlaylist = controller.CurrentSelectedPlaylist;
             var oldSongIdx2 = oldPlaylist.CurrentIndex;
-            Logger.Msg($"Old indices. P: {oldPlaylistIdx}, S: {oldSongIdx} S2: {oldSongIdx2}");
-            Logger.Msg($"New indices. P: {playlistIdx}, S: {newSongIdx}");
-            Logger.Msg($"Old P: {oldPlaylist.Name}, {oldPlaylist.FixedPlaylist}");
-            Logger.Msg($"CSST {controller.CurrentSongSelectionType}");
+            LogVerbose($"Old indices. P: {oldPlaylistIdx}, S: {oldSongIdx} S2: {oldSongIdx2}");
+            LogVerbose($"New indices. P: {playlistIdx}, S: {newSongIdx}");
+            LogVerbose($"Old P: {oldPlaylist.Name}, {oldPlaylist.FixedPlaylist}");
+            LogVerbose($"CSST {controller.CurrentSongSelectionType}");
+
+            //// If we altered the currently selected playlist, make sure it's updated too!
+            //if (controller.CurrentSelectedPlaylist != null &&
+            //    controller.CurrentSelectedPlaylist.CreationDate == newItem.CreationDate &&
+            //    controller.CurrentSelectedPlaylist.Name == newItem.Name)
+            //{
+            //    LogVerbose("Altered current selected playlist, making sure index matches");
+            //    if (newSongIdx > newItem.Songs.Count - 1)
+            //    {
+            //        Logger.Error("New song index will be out of bounds!");
+            //    }
+            //    //controller.CurrentSelectedPlaylist.Songs = newItem.Songs;
+            //    //SetPlaylistItemSongs(controller.CurrentSelectedPlaylist, newItem.Songs);
+            //}
+
+            //controller.Interface__OnSongSelectedForPlaylist();
+            //controller.Interface__OnPlaylistScrollItemClick(oldSongIdx);
+            //controller.Interface__TryAddSongsToSelectredPlaylist;
 
             // Adding the song updates the song preview music. Turn that off until we actually leave
-            SongSelectionManager.GetInstance.StopPreviewAudio();
+            try
+            {
+                SongSelectionManager.GetInstance.StopPreviewAudio();
+            }
+            catch (Exception e)
+            {
+                Logger.Error("Failed to stop preview audio", e);
+            }
         }
 
         public static int FindMatchingPlaylistIndex(SRLogger logger, PlaylistManagementController controller, PlaylistItem searched)
@@ -316,9 +402,17 @@ namespace SRPlaylistManager.Models
         /// <returns></returns>
         private int GetExistingSongIndex(PlaylistSong song)
         {
+            if (song == null)
+            {
+                return -1;
+            }
+
             for (int i = 0; i < PlaylistItem.Songs.Count; i++)
             {
                 var s = PlaylistItem.Songs[i];
+
+                if (s == null)
+                    continue;
 
                 // Based on hash primarily
                 if (!string.IsNullOrEmpty(s.hash))
@@ -344,12 +438,45 @@ namespace SRPlaylistManager.Models
             return a.name.ToLower().Equals(b.name.ToLower()) && a.author.ToLower().Equals(b.author.ToLower());
         }
 
-        private Il2CppSystem.Collections.Generic.List<PlaylistSong> GetSongsNotMatching(PlaylistSong original)
+        private Il2CppSystem.Collections.Generic.List<PlaylistSong> GetSongsThatExist()
+        {
+            //return PlaylistItem.Songs;
+
+            if (SongsProvider.GetInstance == null)
+            {
+                Logger.Error("Null songs provider");
+                return PlaylistItem.Songs;
+            }
+
+            // Remove songs that don't exist (i.e. deleted customs that were in a playlist)
+            var existing = new Il2CppSystem.Collections.Generic.List<PlaylistSong>();
+            foreach (PlaylistSong song in PlaylistItem.Songs)
+            {
+                var foundSong = SongsProvider.GetInstance.GetSongByLeaderboardHash(song.hash);
+                if (foundSong == null)
+                {
+                    Logger.Msg($"Falling back on title/author for song {song.name} {song.author}");
+                    foundSong = SongsProvider.GetInstance.GetSongByNameAndAutor(song.name, song.author);
+                }
+                if (foundSong != null)
+                {
+                    //Logger.Msg($"  Found song {foundSong.Name} {foundSong.FilePath} NoP?{foundSong.IsNotPlayable}, init {foundSong.IsInit}, adm {foundSong.IsAdminOnly}, tbyb {foundSong.IsTBYB}, prod {foundSong.ProductionMode}");
+                    existing.Add(song);
+                }
+                else
+                {
+                    Logger.Error($"Song {song.name} {song.author} {song.hash} not found! Removing from playlist");
+                }
+            }
+            return existing;
+        }
+
+        private Il2CppSystem.Collections.Generic.List<PlaylistSong> GetSongsNotMatching(Il2CppSystem.Collections.Generic.List<PlaylistSong> songs, PlaylistSong original)
         {
             // Remove duplicates that have different hashes but matching name+author
             // This catches drafts with changing hashes / out of date
             var deduplicated = new Il2CppSystem.Collections.Generic.List<PlaylistSong>();
-            foreach (PlaylistSong song in PlaylistItem.Songs)
+            foreach (PlaylistSong song in songs)
             {
                 if (!SongsMatchNameAuthor(song, original))
                 {
@@ -361,14 +488,14 @@ namespace SRPlaylistManager.Models
 
         private void AddToPlaylist(PlaylistSong songToAdd)
         {
-            var songs = GetSongsNotMatching(songToAdd);
+            var songs = GetSongsNotMatching(GetSongsThatExist(), songToAdd);
             var numDuplicates = PlaylistItem.Songs.Count - songs.Count;
 
-            Logger.Msg($"Adding song '{songToAdd.name}' to end of playlist '{PlaylistItem.Name}'. {numDuplicates} duplicates removed.");
+            LogVerbose($"Adding song '{songToAdd.name}' to end of playlist '{PlaylistItem.Name}'. {numDuplicates} duplicates removed.");
             songs.Add(songToAdd);
 
             // Update our reference to the song list
-            PlaylistItem.Songs = songs;
+            SetPlaylistItemSongs(PlaylistItem, songs);
 
             // New playlist item created; to make equality check fail later??
             var newSongIdx = songs.Count - 1;

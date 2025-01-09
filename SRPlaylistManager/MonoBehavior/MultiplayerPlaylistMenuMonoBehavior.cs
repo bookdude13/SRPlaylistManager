@@ -17,7 +17,7 @@ namespace SRPlaylistManager.MonoBehavior
         protected override GameObject GetToggledView()
         {
             // Find good parent so the panel can be seen
-            var center = GameObject.Find("Main Stage Prefab/Z-Wrap/Multiplayer/RoomPanel/MultiplayerRoomPanel");
+            var center = GameObject.Find("Main Stage Prefab/Z-Wrap/Multiplayer/RoomPanel/Scale Wrap/MultiplayerRoomPanel");
             _logger.Msg("Toggled: " + center);
             return center;
         }

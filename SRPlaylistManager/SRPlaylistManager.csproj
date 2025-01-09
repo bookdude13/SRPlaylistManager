@@ -5,11 +5,11 @@
     <GenerateAssemblyInfo>True</GenerateAssemblyInfo>
     <AssemblyTitle>SRPlaylistManager</AssemblyTitle>
     <Product>SRPlaylistManager</Product>
-    <Copyright>Copyright ©  2022</Copyright>
-    <AssemblyVersion>2.0.0.0</AssemblyVersion>
-    <FileVersion>2.0.0.0</FileVersion>
-    <Version>2.0.0.0</Version>
-    <SynthRidersDir>E:\SteamLibrary\steamapps\common\SynthRiders</SynthRidersDir>
+    <Copyright>Copyright ©  2025</Copyright>
+    <AssemblyVersion>2.1.0.0</AssemblyVersion>
+    <FileVersion>2.1.0.0</FileVersion>
+    <Version>2.1.0.0</Version>
+    <SynthRidersDir>C:\Program Files (x86)\Steam\steamapps\common\SynthRiders</SynthRidersDir>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
@@ -43,9 +43,7 @@
     <Reference Include="MelonLoader">
       <HintPath>$(SynthRidersDir)\MelonLoader\net6\MelonLoader.dll</HintPath>
     </Reference>
-    <Reference Include="SRModCore">
-      <HintPath>..\SRModCore\SRModCore\bin\Debug\net6.0\publish\SRModCore.dll</HintPath>
-    </Reference>    <Reference Include="Unity.TextMeshPro">
+    <Reference Include="Unity.TextMeshPro">
       <HintPath>$(SynthRidersDir)\MelonLoader\Il2CppAssemblies\Unity.TextMeshPro.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine">
@@ -57,5 +55,8 @@
     <Reference Include="UnityEngine.UI">
       <HintPath>$(SynthRidersDir)\MelonLoader\Il2CppAssemblies\UnityEngine.UI.dll</HintPath>
     </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SRModCore\SRModCore\SRModCore.csproj" />
   </ItemGroup>
 </Project>

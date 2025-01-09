@@ -1,4 +1,7 @@
-﻿using MelonLoader;
+﻿using Il2Cpp;
+using Il2CppSynth.SongSelection;
+using Il2CppUtil.Controller;
+using MelonLoader;
 using SRModCore;
 using SRPlaylistManager.MonoBehavior;
 using SRPlaylistManager.Services;
@@ -8,6 +11,9 @@ namespace SRPlaylistManager
 {
     public class SRPlaylistManager : MelonMod
     {
+        // If set, adds a ton more logs to debug issues
+        public static bool VERBOSE_LOGS = false;
+
         public static SRPlaylistManager Instance { get; private set; }
 
         private SRLogger logger;
@@ -23,14 +29,14 @@ namespace SRPlaylistManager
             playlistService = new PlaylistService(logger);
             Instance = this;
         }
-        
+
         private void EnsureMainMenuSetup(GameObject zWrap)
         {
             var gameObjectName = "srplaylistmanager_mainmenu";
             var mainMenuPlaylistGO = zWrap.transform.Find(gameObjectName)?.gameObject;
             if (mainMenuPlaylistGO == null)
             {
-                logger.Msg("Playlist GO not found in main menu; creating...");
+                LogVerbose("Playlist GO not found in main menu; creating...");
                 mainMenuPlaylistGO = new GameObject(gameObjectName);
                 mainMenuPlaylistGO.transform.SetParent(zWrap.transform, false);
                 mainMenuMonoBehavior = mainMenuPlaylistGO.AddComponent<MainMenuPlaylistMenuMonoBehavior>();
@@ -38,7 +44,7 @@ namespace SRPlaylistManager
             }
             else
             {
-                logger.Msg("Playlist main menu GO found");
+                LogVerbose("Playlist main menu GO found");
             }
         }
 
@@ -48,7 +54,7 @@ namespace SRPlaylistManager
             var multiplayerPlaylistGO = zWrap.transform.Find(gameObjectName)?.gameObject;
             if (multiplayerPlaylistGO == null)
             {
-                logger.Msg("Playlist GO not found for multiplayer; creating...");
+                LogVerbose("Playlist GO not found for multiplayer; creating...");
                 multiplayerPlaylistGO = new GameObject(gameObjectName);
                 multiplayerPlaylistGO.transform.SetParent(zWrap.transform, false);
                 multiplayerMonoBehavior = multiplayerPlaylistGO.AddComponent<MultiplayerPlaylistMenuMonoBehavior>();
@@ -56,7 +62,7 @@ namespace SRPlaylistManager
             }
             else
             {
-                logger.Msg("Playlist multiplayer GO found");
+                LogVerbose("Playlist multiplayer GO found");
             }
         }
 
@@ -72,6 +78,11 @@ namespace SRPlaylistManager
                 EnsureMainMenuSetup(zWrap);
                 EnsureMultiplayerSetup(zWrap);
                 DisableAddSongsButtonFromPlaylistView(zWrap);
+
+
+                // Need to force update so the text is correct if initially starting on one of the playlists.
+                //HookTextRefreshForInitialLoad("Main Stage Prefab/Z-Wrap/Home/wrap/Home - Play solo [Button]");
+                //HookTextRefreshForInitialLoad("Main Stage Prefab/Z-Wrap/Home/wrap/Home - Party mode [Button]");
             }
             /*else
             {
@@ -82,7 +93,7 @@ namespace SRPlaylistManager
 
         public void OnToggleMainMenuPlaylistButton()
         {
-            logger.Msg("Toggled playlist button for main menu");
+            LogVerbose("Toggled playlist button for main menu");
 
             if (mainMenuMonoBehavior == null)
             {
@@ -90,12 +101,13 @@ namespace SRPlaylistManager
                 return;
             }
 
+
             mainMenuMonoBehavior?.OpenMenu();
         }
 
         public void OnToggleMultiplayerPlaylistButton()
         {
-            logger.Msg("Toggled playlist button for multiplayer");
+            LogVerbose("Toggled playlist button for multiplayer");
 
             if (multiplayerMonoBehavior == null)
             {
@@ -109,6 +121,14 @@ namespace SRPlaylistManager
         public void Log(string message)
         {
             logger.Msg(message);
+        }
+
+        public void LogVerbose(string message)
+        {
+            if (VERBOSE_LOGS)
+            {
+                Log(message);
+            }
         }
 
         private void DisableAddSongsButtonFromPlaylistView(GameObject zWrap)
@@ -125,9 +145,43 @@ namespace SRPlaylistManager
             btnAddSongs.gameObject.SetActive(false);
 
             // Offset the other buttons for a more natural look.
-            // Originally AddSongs -3.95, ChangeCover 0, Delete Playlist 3.95
-            btnChangeCover.localPosition = new Vector3(-3.2f, 0, 0);
-            btnDelete.localPosition = new Vector3(3.2f, 0, 0);
+            // Rearrange so the Change Cover button is in the more natural corner.
+            // Delete mostly stays where it is
+            btnChangeCover.localPosition += new Vector3(0f, -2.4f, 0f);
+            btnDelete.localPosition += new Vector3(0f, 0f, 0f);
+        }
+
+        private void HookTextRefreshForInitialLoad(string buttonPath)
+        {
+            // On the initial game load the selected song in the playlist doesn't go through the normal flow,
+            // so updates to the "remove favorites" button don't happen until a song is selected.
+            // This adds additional checks when navigating from the main menu to avoid this case
+            var button = GameObject.Find(buttonPath);
+            if (button == null)
+            {
+                logger.Error($"Button not found at path '{buttonPath}'!");
+                return;
+            }
+
+            var synthButton = button.GetComponentInChildren<SynthUIButton>();
+            if (synthButton == null)
+            {
+                logger.Error($"Synth button not found under button at path '{buttonPath}'");
+                return;
+            }
+
+            logger.Msg("Hooking into button");
+            synthButton.add_OnButtonSelected(new System.Action(() => {
+                Log("OnButtonSelected called");
+                PlaylistManagementController.GetInstance?.TryDisplayCorrectRemoveFavoriteButton();
+                SongSelectionManager.GetInstance?.UpdateFavoriteButtonState();
+            }));
+
+            synthButton.add_OnButtonSelectedAndPass(new System.Action<SynthUIButton>((passedButton) => {
+                Log("OnButtonSelected called with passed button " + passedButton);
+                PlaylistManagementController.GetInstance?.TryDisplayCorrectRemoveFavoriteButton();
+                SongSelectionManager.GetInstance?.UpdateFavoriteButtonState();
+            }));
         }
     }
 }

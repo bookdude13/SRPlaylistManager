@@ -3,11 +3,8 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 17.3.32819.101
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SRPlaylistManager", "SRPlaylistManager.csproj", "{2A3FFEC0-C394-42DF-9371-ECE6A0A2D05E}"
-	ProjectSection(ProjectDependencies) = postProject
-		{9B7135F7-47F1-421E-9553-722C304B7767} = {9B7135F7-47F1-421E-9553-722C304B7767}
-	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SRModCore", "C:\Users\rfred\git\SRVoting\SRModCore\SRModCore\SRModCore.csproj", "{9B7135F7-47F1-421E-9553-722C304B7767}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SRModCore", "..\SRModCore\SRModCore\SRModCore.csproj", "{37E56AB9-916B-473B-91BE-8C24DAC7D0BA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -19,10 +16,10 @@ Global
 		{2A3FFEC0-C394-42DF-9371-ECE6A0A2D05E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2A3FFEC0-C394-42DF-9371-ECE6A0A2D05E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2A3FFEC0-C394-42DF-9371-ECE6A0A2D05E}.Release|Any CPU.Build.0 = Release|Any CPU
-		{9B7135F7-47F1-421E-9553-722C304B7767}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{9B7135F7-47F1-421E-9553-722C304B7767}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{9B7135F7-47F1-421E-9553-722C304B7767}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{9B7135F7-47F1-421E-9553-722C304B7767}.Release|Any CPU.Build.0 = Release|Any CPU
+		{37E56AB9-916B-473B-91BE-8C24DAC7D0BA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{37E56AB9-916B-473B-91BE-8C24DAC7D0BA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{37E56AB9-916B-473B-91BE-8C24DAC7D0BA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{37E56AB9-916B-473B-91BE-8C24DAC7D0BA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

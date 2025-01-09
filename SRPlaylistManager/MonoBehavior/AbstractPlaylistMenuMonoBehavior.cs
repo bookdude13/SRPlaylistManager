@@ -6,6 +6,7 @@ using System;
 using UnityEngine;
 using Il2CppUtil.Controller;
 using MelonLoader;
+using Il2CppPigeonCoopToolkit.Utillities;
 
 namespace SRPlaylistManager.MonoBehavior
 {
@@ -34,13 +35,23 @@ namespace SRPlaylistManager.MonoBehavior
             toHide.SetActive(true);
         }
 
+        private void LogVerbose(string message)
+        {
+            if (SRPlaylistManager.VERBOSE_LOGS)
+            {
+                _logger.Msg(message);
+            }
+        }
+
         private ScrollablePanel CreatePlaylistPanel(GameObject toHide)
         {
             // Add our playlist menu
             var panel = ScrollablePanel.Create("playlist_panel", () => OnMenuClose(toHide), _logger);
 
             // Use hidden view's parent as our own, since we basically replace it
-            panel.Panel.transform.parent = toHide.transform.parent;
+            //_logger.Msg("Setting parent to " + toHide.transform.name + " parent, " + toHide.transform.parent.name);
+            panel.Panel.transform.SetParent(toHide.transform.parent, true);
+            //panel.Panel.transform.parent = toHide.transform.parent;
 
             // Add header
             panel.AddHeader("playlists_header", "Playlists");
@@ -59,14 +70,15 @@ namespace SRPlaylistManager.MonoBehavior
                 _logger.Error("Current selected song null; not opening menu");
                 return;
             }
-            _logger.Msg($"Current song: '{currentSong.SongDataName}'");
+            LogVerbose($"Current song: '{currentSong.SongDataName}' {currentSong.TrackName} {currentSong.Author}");
 
             // Stop any songs that are playing
             SongSelectionManager.GetInstance?.StopPreviewAudio();
 
             songPlaylistIndexBeforeOpen = currentSong.SearchIndex;
-            _logger.Msg($"Song index before open: {songPlaylistIndexBeforeOpen}");
-            _logger.Msg($"Current plist song idx {PlaylistManagementController.GetInstance.CurrentPlaylistSongIndex}");
+            LogVerbose($"Song search index before open: {songPlaylistIndexBeforeOpen}");
+            LogVerbose($"Current plist song idx {PlaylistManagementController.GetInstance.CurrentPlaylistSongIndex}");
+            LogVerbose($"Current plist song idx lookup {PlaylistManagementController.GetInstance.GetCurrentSelectedPlaylistSongIndex(currentSong.LeaderboardHash, currentSong.TrackName, currentSong.Author)}");
 
             // Get parent for panel
             var viewToHide = GetToggledView();// SongSelectionView.GetView();
@@ -83,7 +95,7 @@ namespace SRPlaylistManager.MonoBehavior
             }
 
             // Add items
-            _logger.Msg($"Adding items");
+            LogVerbose($"Adding items");
             playlistPanel.ClearItems();
             foreach (var playlist in playlists)
             {
@@ -92,7 +104,7 @@ namespace SRPlaylistManager.MonoBehavior
             }
 
             // Show menu, hide center view
-            _logger.Msg($"Showing");
+            LogVerbose($"Showing");
             playlistPanel.SetVisibility(true);
             viewToHide.gameObject.SetActive(false);
         }
@@ -102,47 +114,63 @@ namespace SRPlaylistManager.MonoBehavior
             return Il2CppSynth.SongSelection.SongSelectionManager.GetInstance?.SelectedGameTrack;
         }
 
-        public void RefreshCurrentPlaylistView()
+        /// <summary>
+        /// Updates the current playlist view with any playlist changes made.
+        /// </summary>
+        /// <returns>True if the refreshed view was a fixed view (all songs, favorites) or not found, false if it was a user playlist</returns>
+        public bool RefreshCurrentPlaylistView()
         {
             var controller = PlaylistManagementController.GetInstance;
 
-            _logger.Msg("Current playlist idx: " + controller.CurrentPlaylistIndex);
-            _logger.Msg("Current selected playlist: " + controller.CurrentSelectedPlaylist?.Name);
-            _logger.Msg("Current selection type: " + controller.CurrentSongSelectionType);
+
+            LogVerbose("Current playlist idx: " + controller.CurrentPlaylistIndex);
+            LogVerbose("Current selected playlist: " + controller.CurrentSelectedPlaylist?.Name);
+            LogVerbose("Current selection type: " + controller.CurrentSongSelectionType);
             // Refresh currently selected playlist view
             if (controller.CurrentPlaylistIndex >= 0)
             {
                 if (controller.CurrentSelectedPlaylist.ShowFavorites)
                 {
                     // Favorites playlist logic
-                    _logger.Msg("ShowFavorites");
+                    LogVerbose("ShowFavorites");
                     // 0 is all songs, 1 is favorites
-                    controller.Interface__OnPlaylistScrollItemClick(1);
+                    controller.Interface__ShowFavorites();
+                    //controller.Interface__OnPlaylistScrollItemClick(1);
+                    return true;
                 }
                 else if (controller.CurrentSelectedPlaylist.ShowAllSongs)
                 {
-                    _logger.Msg("ShowAllSongs");
+                    LogVerbose("ShowAllSongs");
                     controller.Interface__OnPlaylistScrollItemClick(0);
+                    return true;
                 }
                 else if (controller.CurrentSelectedPlaylist.ShowAllExperiences)
                 {
-                    _logger.Msg("ShowAllExperiences");
+                    LogVerbose("ShowAllExperiences");
                     controller.Interface__ShowExperiencesShelf();
+                    return true;
                 }
                 else
                 {
                     // Not the special playlists, so just click it like normal
-                    var index = PlaylistPanelItem.FindMatchingPlaylistIndex(_logger, controller, controller.CurrentSelectedPlaylist);
-                    _logger.Msg($"ItemClick playlist index {index}");
-                    controller.Interface__OnPlaylistScrollItemClick(index);
+                    // Note that finding the current selected playlist was returning an index +1 too high, so the current index is simply used
+                    // TODO use index - 1, or CurrentPlaylistIndex?
+                    //var index = PlaylistPanelItem.FindMatchingPlaylistIndex(_logger, controller, controller.CurrentSelectedPlaylist);
+                    //LogVerbose($"ItemClick playlist index {index}");
+                    controller.Interface__OnPlaylistScrollItemClick(controller.CurrentPlaylistIndex);
+                    return false;
                 }
             }
             else
             {
+                LogVerbose("Current playlist index is not a user playlist: " + controller.CurrentPlaylistIndex);
             }
 
             // This turns on song preview audio. Turn that off until we fully exit
             //SongSelectionManager.GetInstance.StopPreviewAudio();
+
+            // Default to assuming a system view, not a user playlist
+            return true;
         }
     }
 }

@@ -110,6 +110,8 @@ namespace SRPlaylistManager.Models
                 logger.Error("Failed to clone interface panel");
                 return null;
             }
+
+            logger.Msg("Cloning interface panel " + panel.name);
             panel.name = name;
 
             var backNav = CloneBackNavBar();
@@ -119,7 +121,8 @@ namespace SRPlaylistManager.Models
                 return null;
             }
             backNav.name = "playlist_backnav";
-            backNav.transform.parent = panel.transform;
+            backNav.transform.SetParent(panel.transform, true);
+            //backNav.transform.parent = panel.transform;
 
             var content = panel.transform.Find("[Content Layer]/Canvas/Scroll View");
             if (content == null)
@@ -136,7 +139,7 @@ namespace SRPlaylistManager.Models
                 // Keep one header and one item for cloning, but hide them.
                 // Delete the rest
 
-                if (go.name.StartsWith("Setting Header"))
+                if (go.name.StartsWith("Setting Header -"))
                 {
                     if (title == null)
                     {
@@ -149,12 +152,15 @@ namespace SRPlaylistManager.Models
                     }
                 }
 
-                if (go.name.StartsWith("Setting Item"))
+                if (go.name.StartsWith("Setting Item -"))
                 {
                     if (item == null)
                     {
                         item = go.gameObject;
                         item.SetActive(false);
+
+                        //logger.Msg("Setting Item components:");
+                        //UnityUtil.LogComponentsRecursive(logger, item.transform);
                     }
                     else
                     {
@@ -198,14 +204,7 @@ namespace SRPlaylistManager.Models
 
         private static GameObject GetInterfacePanel()
         {
-            foreach (var go in GameObject.Find("Z-Wrap").transform.GetComponentsInChildren<Game_PauseMenuPanel>(true))
-            {
-                if (go.gameObject.name == "[Interface Panel]")
-                {
-                    return go.gameObject;
-                }
-            }
-            return null;
+            return GameObject.Find("Main Stage Prefab/Z-Wrap/[Pause Menu Room]/[Wrapper]/Center Container/[Panels Layer]/[Interface Panel]");
         }
     }
 }

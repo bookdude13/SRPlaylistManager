@@ -13,5 +13,5 @@ using System.Runtime.InteropServices;
 // The following GUID is for the ID of the typelib if this project is exposed to COM
 [assembly: Guid("2a3ffec0-c394-42df-9371-ece6a0a2d05e")]
 
-[assembly: MelonInfo(typeof(SRPlaylistManager.SRPlaylistManager), "SRPlaylistManager", "1.2.0", "bookdude13", "https://github.com/bookdude13/SRPlaylistManager")]
+[assembly: MelonInfo(typeof(SRPlaylistManager.SRPlaylistManager), "SRPlaylistManager", "2.1.0", "bookdude13", "https://github.com/bookdude13/SRPlaylistManager")]
 [assembly: MelonGame("Kluge Interactive", "SynthRiders")]
