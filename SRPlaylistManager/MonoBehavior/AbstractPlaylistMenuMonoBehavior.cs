@@ -59,6 +59,8 @@ namespace SRPlaylistManager.MonoBehavior
             return panel;
         }
 
+        protected virtual Vector3 GetPanelOffset() => Vector3.zero;
+
         public void OpenMenu()
         {
             var playlists = playlistService.GetPlaylists();
@@ -92,6 +94,9 @@ namespace SRPlaylistManager.MonoBehavior
             if (playlistPanel == null)
             {
                 playlistPanel = CreatePlaylistPanel(viewToHide);
+
+                // Offset panel as needed
+                playlistPanel.Panel.transform.localPosition += GetPanelOffset();
             }
 
             // Add items

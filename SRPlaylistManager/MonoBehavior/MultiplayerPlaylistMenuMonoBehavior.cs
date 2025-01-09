@@ -14,6 +14,9 @@ namespace SRPlaylistManager.MonoBehavior
     {
         public MultiplayerPlaylistMenuMonoBehavior(IntPtr ptr) : base(ptr) { }
 
+        private Vector3 _panelOffset = new Vector3(0f, 0f, 2f);
+        protected override Vector3 GetPanelOffset() => _panelOffset;
+
         protected override GameObject GetToggledView()
         {
             // Find good parent so the panel can be seen

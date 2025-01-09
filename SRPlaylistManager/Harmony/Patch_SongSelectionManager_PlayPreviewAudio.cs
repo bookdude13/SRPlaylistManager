@@ -10,7 +10,7 @@ namespace SRPlaylistManager.Harmony
         public static void Prefix()
         {
             // Force some UI refreshing on first load. This was the first hook I could make work.
-            PlaylistManagementController.GetInstance.TryDisplayCorrectRemoveFavoriteButton();
+            PlaylistManagementController.GetInstance?.TryDisplayCorrectRemoveFavoriteButton();
         }
     }
 }
