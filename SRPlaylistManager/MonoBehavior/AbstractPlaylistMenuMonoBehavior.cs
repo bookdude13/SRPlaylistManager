@@ -35,7 +35,7 @@ namespace SRPlaylistManager.MonoBehavior
             toHide.SetActive(true);
         }
 
-        private void LogVerbose(string message)
+        protected void LogVerbose(string message)
         {
             if (SRPlaylistManager.VERBOSE_LOGS)
             {
@@ -126,10 +126,11 @@ namespace SRPlaylistManager.MonoBehavior
             LogVerbose("Current playlist idx: " + controller.CurrentPlaylistIndex);
             LogVerbose("Current selected playlist: " + controller.CurrentSelectedPlaylist?.Name);
             LogVerbose("Current selection type: " + controller.CurrentSongSelectionType);
+
             // Refresh currently selected playlist view
             if (controller.CurrentPlaylistIndex >= 0)
             {
-                if (controller.CurrentSelectedPlaylist.ShowFavorites)
+                if (controller.CurrentSongSelectionType == Il2CppUtil.Data.SongSelectionType.FAVORITES)
                 {
                     // Favorites playlist logic
                     LogVerbose("ShowFavorites");
@@ -144,7 +145,7 @@ namespace SRPlaylistManager.MonoBehavior
                     controller.Interface__OnPlaylistScrollItemClick(0);
                     return true;
                 }
-                else if (controller.CurrentSelectedPlaylist.ShowAllExperiences)
+                else if (controller.CurrentSongSelectionType == Il2CppUtil.Data.SongSelectionType.EXPERIENCES)
                 {
                     LogVerbose("ShowAllExperiences");
                     controller.Interface__ShowExperiencesShelf();

@@ -29,7 +29,15 @@ namespace SRPlaylistManager.MonoBehavior
 
             // Resume audio
             _logger.Msg($"Selected song: {SongSelectionManager.GetInstance?.SelectedGameTrack?.name}");
-            SongSelectionManager.GetInstance?.PlayPreviewAudio(true);
+
+            try
+            {
+                SongSelectionManager.GetInstance?.PlayPreviewAudio(true);
+            }
+            catch (Exception)
+            {
+                _logger.Error("Failed to play preview audio (happens sometimes)");
+            }
         }
     }
 }
