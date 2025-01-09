@@ -12,7 +12,7 @@ namespace SRPlaylistManager
     public class SRPlaylistManager : MelonMod
     {
         // If set, adds a ton more logs to debug issues
-        public static bool VERBOSE_LOGS = true;
+        public static bool VERBOSE_LOGS = false;
 
         public static SRPlaylistManager Instance { get; private set; }
 
