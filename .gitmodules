@@ -1,0 +1,3 @@
+[submodule "SRModCore"]
+	path = SRModCore
+	url = git@github.com:bookdude13/SRModCore

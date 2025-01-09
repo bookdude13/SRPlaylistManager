@@ -4,12 +4,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Util.Controller;
-using Util.Data;
+using Il2CppUtil.Controller;
+using Il2CppUtil.Data;
 
 namespace SRPlaylistManager.Services
 {
-    class PlaylistService
+    public class PlaylistService
     {
         private SRLogger logger;
 
@@ -22,7 +22,11 @@ namespace SRPlaylistManager.Services
         {
             var playlists = new List<PlaylistItem>();
 
-            playlists.AddRange(PlaylistManagementController.GetInstance.UserPlaylistList.playlists);
+            var playlistItems = PlaylistManagementController.GetInstance.UserPlaylistList.playlists;
+            foreach (var playlistItem in playlistItems)
+            {
+                playlists.Add(playlistItem);
+            }
             logger.Msg($"{playlists.Count} playlists found");
 
             if (!includeAllSongs)

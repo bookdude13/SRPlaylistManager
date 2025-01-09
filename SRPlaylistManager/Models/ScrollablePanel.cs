@@ -4,12 +4,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Il2Cpp;
 using UnityEngine;
 using UnityEngine.Events;
+using MelonLoader;
 
 namespace SRPlaylistManager.Models
 {
-    internal class ScrollablePanel
+    public class ScrollablePanel
     {
         public GameObject Panel { get; private set; }
 
@@ -17,20 +19,18 @@ namespace SRPlaylistManager.Models
         private GameObject Background { get; set; }
         private GameObject ExistingHeader { get; set; }
         private GameObject ExistingItem { get; set; }
-        private GameObject ExistingButtons { get; set; }
         private GameObject BackNav { get; set; }
         private Transform ItemContainer { get; set; }
         private Action OnClose;
         private List<GameObject> Items = new List<GameObject>();
 
-        public ScrollablePanel(SRLogger logger, GameObject panel, GameObject background, GameObject buttons, GameObject backNav, GameObject header, GameObject item, Transform itemContainer, Action onClose)
+        public ScrollablePanel(SRLogger logger, GameObject panel, GameObject background, GameObject backNav, GameObject header, GameObject item, Transform itemContainer, Action onClose)
         {
             _logger = logger;
             Panel = panel;
             Background = background;
             ExistingHeader = header;
             ExistingItem = item;
-            ExistingButtons = buttons;
             BackNav = backNav;
             ItemContainer = itemContainer;
             OnClose = onClose;
@@ -51,18 +51,10 @@ namespace SRPlaylistManager.Models
                     _logger.Error("Failed to find NavBarButton for back");
                     return;
                 }
-                var button = backBtn.GetComponentInChildren<UnityEngine.UI.Button>(true);
-                button.onClick.RemoveAllListeners();
 
-                var num = button.onClick.GetPersistentEventCount();
-                for (var i = 0; i < num; i++)
-                {
-                    var nm = button.onClick.GetPersistentMethodName(i);
-                    _logger.Debug($"Persistent {nm} removed");
-                    button.onClick.SetPersistentListenerState(i, UnityEventCallState.Off);
-                }
-
-                button.onClick.AddListener(Close);
+                var button = backBtn.GetComponentInChildren<Il2Cpp.SynthUIButton>();
+                button.WhenClicked = new UnityEvent();
+                button.WhenClicked.AddListener(new Action(() => Close()));
             }
             catch (Exception e)
             {
@@ -85,11 +77,13 @@ namespace SRPlaylistManager.Models
 
         public void AddHeader(string name, string text)
         {
+            _logger.Msg($"Adding header '{name}'");
             GameObject newHeader = GameObject.Instantiate(ExistingHeader, ExistingHeader.transform.position, ExistingHeader.transform.rotation, ItemContainer);
             newHeader.name = name;
-            newHeader.GetComponentInChildren<Synth.Utils.LocalizationHelper>().enabled = false;
-            newHeader.GetComponentInChildren<TMPro.TextMeshProUGUI>().SetText(text);
+            newHeader.GetComponentInChildren<Il2CppSynth.Utils.LocalizationHelper>().enabled = false;
+            newHeader.GetComponentInChildren<Il2CppTMPro.TextMeshProUGUI>().SetText(text);
             newHeader.SetActive(true);
+            _logger.Msg($"Header added");
         }
 
         public void ClearItems()
@@ -116,6 +110,8 @@ namespace SRPlaylistManager.Models
                 logger.Error("Failed to clone interface panel");
                 return null;
             }
+
+            logger.Msg("Cloning interface panel " + panel.name);
             panel.name = name;
 
             var backNav = CloneBackNavBar();
@@ -125,25 +121,14 @@ namespace SRPlaylistManager.Models
                 return null;
             }
             backNav.name = "playlist_backnav";
-            backNav.transform.parent = panel.transform;
+            backNav.transform.SetParent(panel.transform, true);
+            //backNav.transform.parent = panel.transform;
 
-            var background = panel.transform.Find("BG");
-            if (background == null)
+            var content = panel.transform.Find("[Content Layer]/Canvas/Scroll View");
+            if (content == null)
             {
-                logger.Error("Failed to find panel background");
+                logger.Error("Failed to find panel content");
                 return null;
-            }
-
-            var buttons = panel.transform.Find("[Buttons Layer]");
-            if (buttons == null)
-            {
-                logger.Error("Failed to find buttons");
-                return null;
-            }
-            // Hide buttons, but keep them around for cloning
-            foreach (var button in buttons.GetComponentsInChildren<Transform>())
-            {
-                button.gameObject.SetActive(false);
             }
 
             logger.Debug("Finding headers and items");
@@ -154,7 +139,7 @@ namespace SRPlaylistManager.Models
                 // Keep one header and one item for cloning, but hide them.
                 // Delete the rest
 
-                if (go.name.StartsWith("Setting Header"))
+                if (go.name.StartsWith("Setting Header -"))
                 {
                     if (title == null)
                     {
@@ -167,12 +152,15 @@ namespace SRPlaylistManager.Models
                     }
                 }
 
-                if (go.name.StartsWith("Setting Item"))
+                if (go.name.StartsWith("Setting Item -"))
                 {
                     if (item == null)
                     {
                         item = go.gameObject;
                         item.SetActive(false);
+
+                        //logger.Msg("Setting Item components:");
+                        //UnityUtil.LogComponentsRecursive(logger, item.transform);
                     }
                     else
                     {
@@ -183,7 +171,7 @@ namespace SRPlaylistManager.Models
             if (title == null) return null;
             if (item == null) return null;
 
-            return new ScrollablePanel(logger, panel, background.gameObject, buttons.gameObject, backNav, title, item, item.transform.parent, onClose);
+            return new ScrollablePanel(logger, panel, content.gameObject, backNav, title, item, item.transform.parent, onClose);
         }
 
         private static GameObject CloneInterfacePanel()
@@ -205,7 +193,7 @@ namespace SRPlaylistManager.Models
 
         private static GameObject CloneBackNavBar()
         {
-            GameObject navBar = GameObject.Find("Z-Wrap/[Pause  Menu Room]/[Wrapper]/Nav Bar");
+            GameObject navBar = GameObject.Find("Z-Wrap/[Pause Menu Room]/[Wrapper]/Nav Bar");
             if (navBar == null)
             {
                 return null;
@@ -216,14 +204,7 @@ namespace SRPlaylistManager.Models
 
         private static GameObject GetInterfacePanel()
         {
-            foreach (var go in GameObject.Find("Z-Wrap").transform.GetComponentsInChildren<Game_PauseMenuPanel>(true))
-            {
-                if (go.gameObject.name == "[Interface Panel]")
-                {
-                    return go.gameObject;
-                }
-            }
-            return null;
+            return GameObject.Find("Main Stage Prefab/Z-Wrap/[Pause Menu Room]/[Wrapper]/Center Container/[Panels Layer]/[Interface Panel]");
         }
     }
 }
