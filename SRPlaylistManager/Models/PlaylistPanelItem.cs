@@ -11,6 +11,7 @@ using Il2CppUtil.Controller;
 using Il2CppUtil.Data;
 using System.Collections.Generic;
 using Il2CppSynth.Data;
+using UnityEngine.UI;
 
 namespace SRPlaylistManager.Models
 {
@@ -107,6 +108,9 @@ namespace SRPlaylistManager.Models
                 ItemButton.WhenClicked.AddListener(new Action(() => Toggle()));
 
                 ItemButton.gameObject.SetActive(true);
+
+                ItemButton.ForceButtonActiveEnabled(true);
+                ItemButton.UpdateVisualState();
             }
             catch (Exception ex)
             {
@@ -431,6 +435,36 @@ namespace SRPlaylistManager.Models
 
             // Not found
             return -1;
+        }
+
+        /// <summary>
+        /// Checks if the given hash matches with the song, fallback to name+author match.
+        /// </summary>
+        /// <param name="hash"></param>
+        /// <param name="name"></param>
+        /// <param name="author"></param>
+        /// <param name="playlistSong"></param>
+        /// <returns></returns>
+        public static bool SongMatches(string hash, string name, string author, PlaylistSong playlistSong)
+        {
+            if (playlistSong == null)
+                return false;
+
+            // Based on hash primarily
+            if (!string.IsNullOrEmpty(playlistSong.hash))
+            {
+                if (playlistSong.hash.Equals(hash))
+                {
+                    return true;
+                }
+            }
+            // Fall back on name and author match
+            else if (playlistSong.name.ToLower().Equals(name.ToLower()) && playlistSong.author.ToLower().Equals(author.ToLower()))
+            {
+                return true;
+            }
+
+            return false;
         }
 
         private bool SongsMatchNameAuthor(PlaylistSong a, PlaylistSong b)
