@@ -1,18 +1,23 @@
 ﻿using Il2Cpp;
+using Il2Cppcom.Kluge.XR.Utils;
+using Il2CppSynth.Multiplayer;
 using Il2CppSynth.SongSelection;
 using Il2CppUtil.Controller;
 using MelonLoader;
 using SRModCore;
+using SRPlaylistManager.Models;
 using SRPlaylistManager.MonoBehavior;
 using SRPlaylistManager.Services;
+using System.Collections;
 using UnityEngine;
+using static MelonLoader.MelonLogger;
 
 namespace SRPlaylistManager
 {
     public class SRPlaylistManager : MelonMod
     {
         // If set, adds a ton more logs to debug issues
-        public static bool VERBOSE_LOGS = false;
+        public static bool VERBOSE_LOGS = true;
 
         public static SRPlaylistManager Instance { get; private set; }
 
@@ -63,6 +68,9 @@ namespace SRPlaylistManager
             else
             {
                 LogVerbose("Playlist multiplayer GO found");
+
+                // Refresh UI, mostly to make sure the favorites/playlist button is active
+                OnMultiplayerTrackFill();
             }
         }
 
@@ -116,6 +124,97 @@ namespace SRPlaylistManager
             }
 
             multiplayerMonoBehavior?.OpenMenu();
+        }
+
+        /// <summary>
+        /// Checks if the currently selected song is in favorites and/or any other playlist.
+        /// Returns false for both if the current song can't be determined (or there is none selected)
+        /// </summary>
+        /// <param name="isInFavorites"></param>
+        /// <param name="isInPlaylist"></param>
+        public void GetCurrentSongPlaylistState(out bool isInFavorites,  out bool isInPlaylist)
+        {
+            isInFavorites = false;
+            isInPlaylist = false;
+
+            if (SongSelectionManager.GetInstance == null)
+                return;
+
+            var selectedTrack = SongSelectionManager.GetInstance.SelectedGameTrack;
+            if (selectedTrack == null)
+                return;
+
+            // Easy enough :)
+            // Note - playlist.Songs is null for the Favorites playlist, so this being here helps simplify logic a bit
+            isInFavorites = selectedTrack.OnFavorites;
+
+            var playlists = playlistService.GetPlaylists();
+            foreach (var playlist in playlists)
+            {
+                if (playlist == null || playlist.Songs == null)
+                    continue;
+
+                foreach (var song in playlist.Songs)
+                {
+                    if (song == null)
+                        continue;
+
+                    if (PlaylistPanelItem.SongMatches(selectedTrack.LeaderboardHash, selectedTrack.TrackName, selectedTrack.Author, song))
+                    {
+                        // If found in any playlist, we have all the info we need and can exit early
+                        isInPlaylist = true;
+                        return;
+                    }
+                }
+            }
+        }
+
+        public void OnMultiplayerTrackFill()
+        {
+            MelonCoroutines.Start(RefreshMultiplayerDelayed());
+        }
+
+        public void OnOpenMultiplayerRoomMenu(Il2CppSynth.Versus.Room room)
+        {
+            var zWrap = GameObject.Find("Main Stage Prefab/Z-Wrap");
+            EnsureMultiplayerSetup(zWrap);
+
+            // Refresh MP state when returning to menu, since this is also needed when returning from a song
+            // if we are the client after the host returns (since we miss the host's song update then)
+            OnMultiplayerTrackFill();
+        }
+
+        private IEnumerator RefreshMultiplayerDelayed()
+        {
+            // Wait for track to be set
+            while (SongSelectionManager.GetInstance == null || SongSelectionManager.GetInstance.SelectedGameTrack == null)
+            {
+                yield return null;
+            }
+
+            PlaylistManagementController.GetInstance?.TryDisplayCorrectRemoveFavoriteButton();
+
+            while (SongSelectionManager.GetInstance == null || SongSelectionManager.GetInstance.favoriteBtn == null || SongSelectionManager.GetInstance.favoriteBtn.synthUIButton == null)
+            {
+                // I'm not sure why, but when returning from a multiplayer run the synthUIButton gets nulled out...but it's on the same GO so I just set it again here so things don't break and properly refresh.
+                if (SongSelectionManager.GetInstance?.favoriteBtn != null && SongSelectionManager.GetInstance.favoriteBtn.synthUIButton == null)
+                {
+                    SongSelectionManager.GetInstance.favoriteBtn.synthUIButton = SongSelectionManager.GetInstance.favoriteBtn.GetComponent<SynthUIButton>();
+                }
+
+                yield return null;
+            }
+
+            SongSelectionManager.GetInstance?.UpdateFavoriteButtonState();
+
+            // Make sure the favorite button is enabled!
+            // When returning from a multiplayer run _after_ the host, this is turned off :/
+            // Fix it here. In the future this may be unnecessary
+            var mpPanel = multiplayerMonoBehavior.GetMultiplayerRoomPanel();
+            var bottomPanel = mpPanel.transform.Find("MainPanel/BottomPanel");
+            var favWrap = bottomPanel.transform.Find("Song Info Wrap/Favorite Wrap");
+            logger.Msg("Ensuring favorite button is shown!");
+            favWrap.SetActive(true);
         }
 
         public void Log(string message)

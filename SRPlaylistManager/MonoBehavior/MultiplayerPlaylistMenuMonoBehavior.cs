@@ -14,13 +14,18 @@ namespace SRPlaylistManager.MonoBehavior
     {
         public MultiplayerPlaylistMenuMonoBehavior(IntPtr ptr) : base(ptr) { }
 
-        private Vector3 _panelOffset = new Vector3(0f, 0f, 2f);
+        private Vector3 _panelOffset = new Vector3(0f, 0f, 5f);
         protected override Vector3 GetPanelOffset() => _panelOffset;
+
+        private Vector3 _panelScale = Vector3.one * 0.5f;
+        protected override Vector3 GetPanelScale() => _panelScale;
+
+        public GameObject GetMultiplayerRoomPanel() => GameObject.Find("Main Stage Prefab/Z-Wrap/Multiplayer/RoomPanel/Scale Wrap/MultiplayerRoomPanel");
 
         protected override GameObject GetToggledView()
         {
             // Find good parent so the panel can be seen
-            var center = GameObject.Find("Main Stage Prefab/Z-Wrap/Multiplayer/RoomPanel/Scale Wrap/MultiplayerRoomPanel");
+            var center = GetMultiplayerRoomPanel();
             _logger.Msg("Toggled: " + center);
             return center;
         }

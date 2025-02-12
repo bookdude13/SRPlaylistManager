@@ -22,6 +22,12 @@ namespace SRPlaylistManager.Services
         {
             var playlists = new List<PlaylistItem>();
 
+            if (PlaylistManagementController.GetInstance?.UserPlaylistList?.playlists == null)
+            {
+                logger.Error("Can't retrieve playlists (null)!");
+                return playlists;
+            }
+
             var playlistItems = PlaylistManagementController.GetInstance.UserPlaylistList.playlists;
             foreach (var playlistItem in playlistItems)
             {

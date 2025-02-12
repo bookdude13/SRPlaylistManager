@@ -18,7 +18,7 @@ namespace SRPlaylistManager.Harmony
             __instance.tooltip = "Select Playlists";
 
             // Treat the click as the end to the hover, to hide the tooltip
-            //__instance.OnPointerExit(eventData);
+            __instance.OnPointerExit(eventData);
             __instance.isHovered = false;
 
             SRPlaylistManager.Instance?.OnToggleMultiplayerPlaylistButton();

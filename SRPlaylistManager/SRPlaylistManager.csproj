@@ -55,6 +55,9 @@
     <Reference Include="UnityEngine.UI">
       <HintPath>$(SynthRidersDir)\MelonLoader\Il2CppAssemblies\UnityEngine.UI.dll</HintPath>
     </Reference>
+    <Reference Include="UnityEngine.UIModule">
+      <HintPath>$(SynthRidersDir)\MelonLoader\Il2CppAssemblies\UnityEngine.UIModule.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\SRModCore\SRModCore\SRModCore.csproj" />
