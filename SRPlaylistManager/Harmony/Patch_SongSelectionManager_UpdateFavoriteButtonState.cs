@@ -1,5 +1,6 @@
 ﻿using HarmonyLib;
 using Il2Cpp;
+using Il2Cppcom.Kluge.XR.Utils;
 using Il2CppSynth.SongSelection;
 using SRModCore;
 using UnityEngine.Playables;

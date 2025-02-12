@@ -1,4 +1,6 @@
 ﻿using Il2Cpp;
+using Il2Cppcom.Kluge.XR.Utils;
+using Il2CppSynth.Multiplayer;
 using Il2CppSynth.SongSelection;
 using Il2CppUtil.Controller;
 using MelonLoader;
@@ -8,6 +10,7 @@ using SRPlaylistManager.MonoBehavior;
 using SRPlaylistManager.Services;
 using System.Collections;
 using UnityEngine;
+using static MelonLoader.MelonLogger;
 
 namespace SRPlaylistManager
 {
@@ -65,6 +68,9 @@ namespace SRPlaylistManager
             else
             {
                 LogVerbose("Playlist multiplayer GO found");
+
+                // Refresh UI, mostly to make sure the favorites/playlist button is active
+                OnMultiplayerTrackFill();
             }
         }
 
@@ -168,10 +174,18 @@ namespace SRPlaylistManager
             MelonCoroutines.Start(RefreshMultiplayerDelayed());
         }
 
+        public void OnOpenMultiplayerRoomMenu(Il2CppSynth.Versus.Room room)
+        {
+            var zWrap = GameObject.Find("Main Stage Prefab/Z-Wrap");
+            EnsureMultiplayerSetup(zWrap);
+
+            // Refresh MP state when returning to menu, since this is also needed when returning from a song
+            // if we are the client after the host returns (since we miss the host's song update then)
+            OnMultiplayerTrackFill();
+        }
+
         private IEnumerator RefreshMultiplayerDelayed()
         {
-            LogVerbose("Waiting for MP track");
-            
             // Wait for track to be set
             while (SongSelectionManager.GetInstance == null || SongSelectionManager.GetInstance.SelectedGameTrack == null)
             {
@@ -180,7 +194,6 @@ namespace SRPlaylistManager
 
             PlaylistManagementController.GetInstance?.TryDisplayCorrectRemoveFavoriteButton();
 
-            LogVerbose("Waiting for MP favorite button");
             while (SongSelectionManager.GetInstance == null || SongSelectionManager.GetInstance.favoriteBtn == null || SongSelectionManager.GetInstance.favoriteBtn.synthUIButton == null)
             {
                 // I'm not sure why, but when returning from a multiplayer run the synthUIButton gets nulled out...but it's on the same GO so I just set it again here so things don't break and properly refresh.
@@ -192,9 +205,16 @@ namespace SRPlaylistManager
                 yield return null;
             }
 
-            LogVerbose("Done waiting; refreshing MP");
-
             SongSelectionManager.GetInstance?.UpdateFavoriteButtonState();
+
+            // Make sure the favorite button is enabled!
+            // When returning from a multiplayer run _after_ the host, this is turned off :/
+            // Fix it here. In the future this may be unnecessary
+            var mpPanel = multiplayerMonoBehavior.GetMultiplayerRoomPanel();
+            var bottomPanel = mpPanel.transform.Find("MainPanel/BottomPanel");
+            var favWrap = bottomPanel.transform.Find("Song Info Wrap/Favorite Wrap");
+            logger.Msg("Ensuring favorite button is shown!");
+            favWrap.SetActive(true);
         }
 
         public void Log(string message)

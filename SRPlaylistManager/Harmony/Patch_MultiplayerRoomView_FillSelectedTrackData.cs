@@ -11,7 +11,6 @@ namespace SRPlaylistManager.Harmony
         public static void Postfix()
         {
             // Make sure the playlist button is properly set up!
-            SRPlaylistManager.Instance.LogVerbose("FillSelectedTrackData");
             SRPlaylistManager.Instance.OnMultiplayerTrackFill();
         }
     }

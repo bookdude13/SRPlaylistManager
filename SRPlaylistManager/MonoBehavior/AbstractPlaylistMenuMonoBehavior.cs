@@ -59,6 +59,7 @@ namespace SRPlaylistManager.MonoBehavior
             return panel;
         }
 
+        protected virtual Vector3 GetPanelScale() => Vector3.one * 0.2f;
         protected virtual Vector3 GetPanelOffset() => Vector3.zero;
 
         public void OpenMenu()
@@ -94,6 +95,9 @@ namespace SRPlaylistManager.MonoBehavior
             if (playlistPanel == null)
             {
                 playlistPanel = CreatePlaylistPanel(viewToHide);
+
+                // Scale as needed
+                playlistPanel.Panel.transform.localScale = GetPanelScale();
 
                 // Offset panel as needed
                 playlistPanel.Panel.transform.localPosition += GetPanelOffset();
